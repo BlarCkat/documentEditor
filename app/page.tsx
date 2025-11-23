@@ -181,6 +181,10 @@ export default function DocumentEditor() {
                   {isSaving ? 'Saving...' : `Saved at ${lastSaved}`}
                 </span>
               )}
+
+              <Button variant={'ghost'}>
+              Join the Waitlist
+              </Button>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
