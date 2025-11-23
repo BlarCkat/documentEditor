@@ -1,65 +1,345 @@
-import Image from "next/image";
+"use client"
+import React, { useState, useEffect, useRef } from 'react';
+import { Save, FileText, Trash2, Download, Bold, Italic, Underline, List, ListOrdered, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Card } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
-export default function Home() {
+export default function DocumentEditor() {
+  const [content, setContent] = useState('');
+  const [title, setTitle] = useState('Untitled Document');
+  const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showClearDialog, setShowClearDialog] = useState(false);
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const savedContent = localStorage.getItem('doc_content');
+    const savedTitle = localStorage.getItem('doc_title');
+    
+    if (savedContent) {
+      setContent(savedContent);
+      if (editorRef.current) {
+        editorRef.current.innerHTML = savedContent;
+      }
+    }
+    if (savedTitle) setTitle(savedTitle);
+  }, []);
+
+  // Auto-save to localStorage
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (content || title !== 'Untitled Document') {
+        localStorage.setItem('doc_content', content);
+        localStorage.setItem('doc_title', title);
+        setLastSaved(new Date().toLocaleTimeString());
+        setIsSaving(false);
+      }
+    }, 1000);
+
+    setIsSaving(true);
+    return () => clearTimeout(timer);
+  }, [content, title]);
+
+  // Clear localStorage on page unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      localStorage.removeItem('doc_content');
+      localStorage.removeItem('doc_title');
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
+  const handleInput = () => {
+    if (editorRef.current) {
+      setContent(editorRef.current.innerHTML);
+    }
+  };
+
+  const executeCommand = (command: string, value?: string) => {
+    document.execCommand(command, false, value);
+    editorRef.current?.focus();
+  };
+
+  const handleClear = () => {
+    setContent('');
+    setTitle('Untitled Document');
+    if (editorRef.current) {
+      editorRef.current.innerHTML = '';
+    }
+    localStorage.removeItem('doc_content');
+    localStorage.removeItem('doc_title');
+    setLastSaved(null);
+    setShowClearDialog(false);
+  };
+
+  const getPlainText = () => {
+    const temp = document.createElement('div');
+    temp.innerHTML = content;
+    return temp.textContent || temp.innerText || '';
+  };
+
+  const handleDownloadTxt = () => {
+    const plainText = getPlainText();
+    const blob = new Blob([plainText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadPDF = () => {
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>${title}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              max-width: 800px;
+              margin: 40px auto;
+              padding: 20px;
+              line-height: 1.6;
+            }
+            h1 {
+              font-size: 24px;
+              margin-bottom: 20px;
+              border-bottom: 2px solid #333;
+              padding-bottom: 10px;
+            }
+            .content {
+              word-wrap: break-word;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>${title}</h1>
+          <div class="content">${content}</div>
+        </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+      }, 250);
+    }
+  };
+
+  const plainText = getPlainText();
+  const wordCount = plainText.split(/\s+/).filter(w => w.length > 0).length;
+  const charCount = plainText.length;
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
+      <header className="border-b bg-card">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <FileText className="w-6 h-6 text-primary shrink-0" />
+              <Input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="text-xl font-semibold border-none shadow-none focus-visible:ring-0 px-2"
+                placeholder="Document title"
+              />
+            </div>
+            
+            <div className="flex items-center gap-3 shrink-0">
+              {lastSaved && (
+                <span className="text-sm text-muted-foreground hidden sm:inline">
+                  {isSaving ? 'Saving...' : `Saved at ${lastSaved}`}
+                </span>
+              )}
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button>
+                    <Download className="w-4 h-4 mr-2" />
+                    Download
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleDownloadTxt}>
+                    Download as TXT
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleDownloadPDF}>
+                    Download as PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Button 
+                variant="destructive" 
+                onClick={() => setShowClearDialog(true)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Clear
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Toolbar */}
+      <div className="border-b bg-card">
+        <div className="container mx-auto px-4 py-2">
+          <div className="flex items-center gap-1 flex-wrap">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => executeCommand('bold')}
+              title="Bold"
+            >
+              <Bold className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => executeCommand('italic')}
+              title="Italic"
+            >
+              <Italic className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => executeCommand('underline')}
+              title="Underline"
+            >
+              <Underline className="w-4 h-4" />
+            </Button>
+            
+            <Separator orientation="vertical" className="h-6 mx-1" />
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => executeCommand('insertUnorderedList')}
+              title="Bullet List"
+            >
+              <List className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => executeCommand('insertOrderedList')}
+              title="Numbered List"
+            >
+              <ListOrdered className="w-4 h-4" />
+            </Button>
+            
+            <Separator orientation="vertical" className="h-6 mx-1" />
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => executeCommand('justifyLeft')}
+              title="Align Left"
+            >
+              <AlignLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => executeCommand('justifyCenter')}
+              title="Align Center"
+            >
+              <AlignCenter className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => executeCommand('justifyRight')}
+              title="Align Right"
+            >
+              <AlignRight className="w-4 h-4" />
+            </Button>
+            
+            <Separator orientation="vertical" className="h-6 mx-1" />
+            
+            <select
+              onChange={(e) => executeCommand('formatBlock', e.target.value)}
+              className="h-8 px-2 rounded-md border border-input bg-background text-sm"
+              defaultValue="p"
+            >
+              <option value="p">Normal</option>
+              <option value="h1">Heading 1</option>
+              <option value="h2">Heading 2</option>
+              <option value="h3">Heading 3</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Editor */}
+      <main className="flex-1 container mx-auto px-4">
+        <div
+          ref={editorRef}
+          contentEditable
+          onInput={handleInput}
+          className="w-full h-full overflow-auto py-6 focus:outline-none prose prose-sm max-w-none"
+          suppressContentEditableWarning
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t bg-card">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>{charCount} characters</span>
+            <span>{wordCount} words</span>
+          </div>
+        </div>
+      </footer>
+
+      {/* Clear Confirmation Dialog */}
+      <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will clear all content from your document. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleClear}>
+              Clear Document
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
