@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Save, FileText, Trash2, Download, Bold, Italic, Underline, List, ListOrdered, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ export default function DocumentEditor() {
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [showClearDialog, setShowClearDialog] = useState(false);
+  const [showWelcomeDialog, setShowWelcomeDialog] = useState(true);
   const editorRef = useRef<HTMLDivElement>(null);
 
   // Load from localStorage on mount
@@ -182,8 +184,9 @@ export default function DocumentEditor() {
                 </span>
               )}
 
-              <Button variant={'ghost'}>
-              Join the Waitlist
+              <Button variant={'ghost'} data-tally-open="1AAe9l" data-tally-width="360" data-tally-emoji-text="👋" data-tally-emoji-animation="wave">
+                Join us.
+                
               </Button>
               
               <DropdownMenu>
@@ -340,6 +343,23 @@ export default function DocumentEditor() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleClear}>
               Clear Document
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Welcome Dialog */}
+      <AlertDialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-2xl">Welcome to the Superdocs MVP.</AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              This is just a simple text editor. Currently in progress. Join the waitlist to get notified when it's ready.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowWelcomeDialog(false)}>
+              Get Started
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

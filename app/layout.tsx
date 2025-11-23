@@ -29,6 +29,7 @@ export default function RootLayout({
       >
         {children}
       </body>
+      <script async src="https://tally.so/widgets/embed.js"></script>
     </html>
   );
 }
