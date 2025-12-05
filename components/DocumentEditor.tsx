@@ -353,7 +353,7 @@ export default function DocumentEditor() {
                 New
               </Button>
 
-              <Button variant={'ghost'}>
+              <Button variant={'ghost'} data-tally-open="1AAe9l" data-tally-width="360" data-tally-emoji-text="👋" data-tally-emoji-animation="wave">
                 Join the Waitlist
               </Button>
               
