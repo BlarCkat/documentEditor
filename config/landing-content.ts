@@ -1,0 +1,223 @@
+export const landingContent = {
+  hero: {
+    title: {
+      main: "Enfinotes helps you",
+      benefits: [
+        "Write your next viral tweet",
+        "Draft your series like a pro",
+        "Build an authentic personal brand",
+        "Master your content calendar"
+      ]
+    },
+    subtitle: "Meet the all-in-one content creation workspace for modern creators. Turn your raw ideas into high-impact distribution across every social channel.",
+    chatPlaceholder: "How can I help you today?",
+    quickActions: [
+      { icon: "PenTool", label: "Write a script" },
+      { icon: "GraduationCap", label: "Start a new series" },
+      { icon: "Layout", label: "Schedule February" },
+      { icon: "Code", label: "Code" },
+      { icon: "Coffee", label: "Life stuff" }
+    ],
+    cta: {
+      primary: "Start creating",
+      secondary: "New: Personal Brand Optimizer (Beta)"
+    }
+  },
+
+  features: {
+    title: "Engineered for creative growth",
+    description: "Enfinotes is built on the workflows that distinguish top-tier creators: relentless focus, fast iteration, and a commitment to authentic storytelling.",
+    items: [
+      {
+        title: "Multi-Channel Sync",
+        description: "Draft once and deploy optimized versions to X, LinkedIn, and Threads instantly.",
+        icon: "Terminal",
+        color: "indigo"
+      },
+      {
+        title: "Creative Speed",
+        description: "Move from a fleeting thought to a polished thread in seconds with rapid-capture tools.",
+        icon: "Layout",
+        color: "purple"
+      },
+      {
+        title: "Engagement Insights",
+        description: "Understand which hooks resonate with your audience before you commit to the post.",
+        icon: "BarChart2",
+        color: "blue"
+      }
+    ]
+  },
+
+  ai: {
+    badge: "Artificial Intelligence",
+    title: "AI-assisted brand development",
+    description: {
+      highlight: "Enfinotes for Creators.",
+      text: "Delegate the research and formatting to agents that understand your unique voice."
+    },
+    cta: "Explore agents",
+    agents: [
+      { name: "Tone Matcher", type: "Agent", color: "indigo" },
+      { name: "Trend Researcher", type: "Agent", color: "purple" },
+      { name: "Hook Optimizer", type: "Agent", color: "blue" },
+      { name: "Social Strategist", type: "Lead", color: "orange" }
+    ],
+    menu: {
+      at: {
+        title: "Mention Agent",
+        options: ["Tone Matcher", "Trend Researcher", "Hook Specialist"]
+      },
+      slash: {
+        title: "Quick Actions",
+        options: ["Summarize", "Rewrite as Thread", "Optimize Hooks"]
+      },
+      cmd: {
+        title: "Command detected",
+        message: "Type what you want to create..."
+      }
+    }
+  },
+
+  planning: {
+    badge: "Campaign and roadmap planning",
+    title: "Set the content direction",
+    description: {
+      highlight: "Align your brand around a unified timeline.",
+      text: "Plan long-form series and daily distribution with visual roadmap tools."
+    },
+    projects: [
+      { name: "10-Part Video Masterclass", status: "In Progress" },
+      { name: "Personal Brand Launch", status: "Queueing" }
+    ]
+  },
+
+  management: {
+    sections: [
+      {
+        title: "Manage your brand end-to-end",
+        description: "Consolidate hooks, scripts, captions, and assets in one centralized creator dashboard.",
+        cards: [
+          { label: "Status", value: "Drafting", sub: "X" },
+          { label: "Medium", value: "Short-form", sub: "TikTok" }
+        ]
+      },
+      {
+        title: "Growth updates",
+        description: "Communicate your progress and account health with automated performance snapshots.",
+        updates: [
+          { status: "Off track", color: "red", date: "Jan 20" },
+          { status: "At risk", color: "orange", date: "Jan 24" },
+          { status: "On track", color: "green", date: "Jan 29" }
+        ]
+      },
+      {
+        title: "Ideate and specify what to post next",
+        features: [
+          { icon: "FileText", label: "Collaborative scripts", active: true },
+          { icon: "MessageSquare", label: "Inline feedback", active: false },
+          { icon: "Command", label: "Text-to-post commands", active: false }
+        ],
+        collaboration: {
+          title: "Collaborate on ideas",
+          description: "Write down content ideas and work together on hooks in realtime. Add **style** and ##structure with creator-first formatting."
+        }
+      }
+    ]
+  },
+
+  tracking: {
+    cycles: {
+      title: "Build momentum with Cycles",
+      description: "Create healthy posting routines and focus your team on what content should happen next.",
+      cycleNumber: 55,
+      legend: ["Scope", "Started", "Completed"]
+    },
+    triage: {
+      title: "Manage incoming work with Triage",
+      description: "Review and assign incoming sponsorship inquiries, feature requests, and unplanned collab work.",
+      items: [
+        { title: "Sponsorship: Unexpected rate limiting", action: "Accept" }
+      ]
+    }
+  },
+
+  pricing: {
+    badge: "Pricing",
+    title: "Choose your plan",
+    description: "Start free and upgrade as you grow. All plans include access to our AI-powered writing tools.",
+    disclaimer: "All plans include 14-day money-back guarantee. No credit card required for free tier.",
+    links: ["Compare plans", "View FAQ", "Contact sales"],
+    plans: [
+      {
+        name: "Free",
+        price: 0,
+        period: "forever",
+        description: "For creators just getting started",
+        features: [
+          "3 pages per month",
+          "Basic AI assistance",
+          "Single platform posting",
+          "Email support"
+        ],
+        cta: "Start free",
+        highlighted: false
+      },
+      {
+        name: "Pro",
+        price: 20,
+        period: "month",
+        description: "For serious creators",
+        features: [
+          "Unlimited pages",
+          "Advanced AI assistance",
+          "Multi-platform scheduling",
+          "Analytics dashboard",
+          "Priority support",
+          "Custom templates"
+        ],
+        cta: "Upgrade to Pro",
+        highlighted: true
+      },
+      {
+        name: "Enterprise",
+        price: 149,
+        period: "month",
+        description: "For teams and agencies",
+        features: [
+          "Everything in Pro",
+          "Up to 10 team members",
+          "Collaborative workspace",
+          "Advanced analytics",
+          "Custom integrations",
+          "Dedicated account manager",
+          "SSO authentication",
+          "API access"
+        ],
+        cta: "Contact sales",
+        highlighted: false
+      }
+    ]
+  },
+
+  cta: {
+    title: "Plan the present. Build the future.",
+    buttons: [
+      { label: "Contact sales", variant: "secondary" },
+      { label: "Get started", variant: "primary" }
+    ]
+  },
+
+  footer: {
+    brand: "Enfinotes",
+    copyright: "© 2026 Content Engineering Lab"
+  },
+
+  nav: {
+    brand: "Enfinotes",
+    links: [
+      { label: "Log in", href: "/auth/signin" },
+      { label: "Sign up", href: "/auth/signup" }
+    ]
+  }
+};
