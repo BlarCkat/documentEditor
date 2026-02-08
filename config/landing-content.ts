@@ -1,4 +1,134 @@
-export const landingContent = {
+interface ManagementCard {
+  label: string;
+  value: string;
+  sub: string;
+}
+
+interface ManagementUpdate {
+  status: string;
+  color: string;
+  date: string;
+}
+
+interface ManagementFeature {
+  icon: string;
+  label: string;
+  active: boolean;
+}
+
+interface ManagementCollaboration {
+  title: string;
+  description: string;
+}
+
+interface ManagementSection {
+  title: string;
+  description?: string;
+  cards?: ManagementCard[];
+  updates?: ManagementUpdate[];
+  features?: ManagementFeature[];
+  collaboration?: ManagementCollaboration;
+}
+
+interface LandingContent {
+  hero: {
+    title: {
+      main: string;
+      benefits: string[];
+    };
+    subtitle: string;
+    chatPlaceholder: string;
+    quickActions: { icon: string; label: string }[];
+    cta: {
+      primary: string;
+      secondary: string;
+    };
+  };
+  features: {
+    title: string;
+    description: string;
+    items: {
+      title: string;
+      description: string;
+      icon: string;
+      color: string;
+    }[];
+  };
+  ai: {
+    badge: string;
+    title: string;
+    description: {
+      highlight: string;
+      text: string;
+    };
+    cta: string;
+    agents: { name: string; type: string; color: string }[];
+    menu: {
+      at: { title: string; options: string[] };
+      slash: { title: string; options: string[] };
+      cmd: { title: string; message: string };
+    };
+  };
+  planning: {
+    badge: string;
+    title: string;
+    description: {
+      highlight: string;
+      text: string;
+    };
+    projects: { name: string; status: string }[];
+  };
+  management: {
+    sections: [
+      ManagementSection & { cards: ManagementCard[] },
+      ManagementSection & { updates: ManagementUpdate[] },
+      ManagementSection & { features: ManagementFeature[]; collaboration: ManagementCollaboration }
+    ];
+  };
+  tracking: {
+    cycles: {
+      title: string;
+      description: string;
+      cycleNumber: number;
+      legend: string[];
+    };
+    triage: {
+      title: string;
+      description: string;
+      items: { title: string; action: string }[];
+    };
+  };
+  pricing: {
+    badge: string;
+    title: string;
+    description: string;
+    disclaimer: string;
+    links: string[];
+    plans: {
+      name: string;
+      price: number;
+      period: string;
+      description: string;
+      features: string[];
+      cta: string;
+      highlighted: boolean;
+    }[];
+  };
+  cta: {
+    title: string;
+    buttons: { label: string; variant: string }[];
+  };
+  footer: {
+    brand: string;
+    copyright: string;
+  };
+  nav: {
+    brand: string;
+    links: { label: string; href: string }[];
+  };
+}
+
+export const landingContent: LandingContent = {
   hero: {
     title: {
       main: "Enfinotes helps you",
