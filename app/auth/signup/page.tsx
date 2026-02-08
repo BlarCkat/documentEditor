@@ -15,7 +15,7 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signUp, signInWithGoogle, user } = useAuth();
+  const { signUp, signInWithGoogle, user, userProfile } = useAuth();
   const router = useRouter();
 
   // Password strength indicators
@@ -26,10 +26,14 @@ export default function SignUp() {
   });
 
   useEffect(() => {
-    if (user) {
-      router.push('/');
+    if (user && userProfile) {
+      if (!userProfile.onboardingCompleted) {
+        router.push('/onboarding');
+      } else {
+        router.push('/dashboard');
+      }
     }
-  }, [user, router]);
+  }, [user, userProfile, router]);
 
   useEffect(() => {
     setPasswordStrength({
@@ -85,7 +89,7 @@ export default function SignUp() {
 
     try {
       await signUp(email, password, displayName);
-      router.push('/');
+      // Redirect will be handled by useEffect after userProfile loads
     } catch (err: any) {
       setError(err.message || 'Failed to create account. Please try again.');
     } finally {

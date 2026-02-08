@@ -24,6 +24,19 @@ export interface SubscriptionPlan {
   paystackPlanCode?: string;
 }
 
+// Onboarding types
+export type UserRole = 'creator' | 'writer' | 'marketer' | 'developer' | 'student' | 'other';
+export type InterfaceStyle = 'chat' | 'canvas';
+export type ThemePreference = 'dark' | 'light';
+
+export interface OnboardingData {
+  displayName: string;
+  role: UserRole;
+  purpose: string;
+  interfaceStyle: InterfaceStyle;
+  themePreference: ThemePreference;
+}
+
 export interface UserProfile {
   uid: string;
   email: string;
@@ -35,4 +48,55 @@ export interface UserProfile {
     pagesCreated: number;
     lastResetDate: Date;
   };
+  // Onboarding and preferences
+  onboardingCompleted: boolean;
+  userRole?: UserRole;
+  userPurpose?: string;
+  interfaceStyle: InterfaceStyle;
+  themePreference: ThemePreference;
+  sidebarCollapsed: boolean;
+}
+
+// Canvas types
+export interface Note {
+  id: string;
+  userId: string;
+  title: string;
+  content: string;
+  position: { x: number; y: number };
+  size: { width: number; height: number };
+  color: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface NoteConnection {
+  id: string;
+  sourceNoteId: string;
+  targetNoteId: string;
+  createdAt: Date;
+}
+
+// Chat types
+export interface ChatMessage {
+  id: string;
+  conversationId: string;
+  content: string;
+  role: 'user' | 'assistant';
+  createdAt: Date;
+}
+
+export interface ChatConversation {
+  id: string;
+  userId: string;
+  title: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Canvas viewport
+export interface CanvasViewport {
+  x: number;
+  y: number;
+  zoom: number;
 }

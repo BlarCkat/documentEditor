@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { UserProfile, Subscription } from '@/types';
+import { UserProfile, Subscription, OnboardingData } from '@/types';
 
 interface AuthContextType {
   user: User | null;
@@ -16,6 +16,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   refreshUserProfile: () => Promise<void>;
+  updateUserPreferences: (preferences: Partial<UserProfile>) => Promise<void>;
+  completeOnboarding: (data: OnboardingData) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -66,6 +68,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             pagesCreated: data.pages_created || 0,
             lastResetDate: data.last_reset_date ? new Date(data.last_reset_date) : new Date(),
           },
+          // Onboarding and preferences
+          onboardingCompleted: data.onboarding_completed || false,
+          userRole: data.user_role,
+          userPurpose: data.user_purpose,
+          interfaceStyle: data.interface_style || 'chat',
+          themePreference: data.theme_preference || 'dark',
+          sidebarCollapsed: data.sidebar_collapsed || false,
         };
       }
       return null;
@@ -102,6 +111,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           subscription_start_date: defaultSubscription.startDate.toISOString(),
           pages_created: 0,
           last_reset_date: new Date().toISOString(),
+          // Default onboarding values
+          onboarding_completed: false,
+          interface_style: 'chat',
+          theme_preference: 'dark',
+          sidebar_collapsed: false,
         });
 
         if (error) {
@@ -118,6 +132,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const profile = await fetchUserProfile(user.id);
       setUserProfile(profile);
     }
+  };
+
+  const updateUserPreferences = async (preferences: Partial<UserProfile>) => {
+    if (!user) throw new Error('No user logged in');
+
+    // Map TypeScript fields to database columns
+    const dbUpdates: Record<string, unknown> = {};
+
+    if (preferences.displayName !== undefined) dbUpdates.display_name = preferences.displayName;
+    if (preferences.photoURL !== undefined) dbUpdates.photo_url = preferences.photoURL;
+    if (preferences.onboardingCompleted !== undefined) dbUpdates.onboarding_completed = preferences.onboardingCompleted;
+    if (preferences.userRole !== undefined) dbUpdates.user_role = preferences.userRole;
+    if (preferences.userPurpose !== undefined) dbUpdates.user_purpose = preferences.userPurpose;
+    if (preferences.interfaceStyle !== undefined) dbUpdates.interface_style = preferences.interfaceStyle;
+    if (preferences.themePreference !== undefined) dbUpdates.theme_preference = preferences.themePreference;
+    if (preferences.sidebarCollapsed !== undefined) dbUpdates.sidebar_collapsed = preferences.sidebarCollapsed;
+
+    const { error } = await supabase
+      .from('users')
+      .update(dbUpdates)
+      .eq('uid', user.id);
+
+    if (error) throw error;
+
+    // Refresh the profile after update
+    await refreshUserProfile();
+  };
+
+  const completeOnboarding = async (data: OnboardingData) => {
+    if (!user) throw new Error('No user logged in');
+
+    const { error } = await supabase
+      .from('users')
+      .update({
+        display_name: data.displayName,
+        user_role: data.role,
+        user_purpose: data.purpose,
+        interface_style: data.interfaceStyle,
+        theme_preference: data.themePreference,
+        onboarding_completed: true,
+      })
+      .eq('uid', user.id);
+
+    if (error) throw error;
+
+    // Refresh the profile after onboarding
+    await refreshUserProfile();
   };
 
   useEffect(() => {
@@ -216,6 +277,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     resetPassword,
     refreshUserProfile,
+    updateUserPreferences,
+    completeOnboarding,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
