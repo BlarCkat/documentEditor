@@ -15,7 +15,7 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signUp, signInWithGoogle, user, userProfile } = useAuth();
+  const { signUp, signInWithGoogle, user, userProfile, loading: authLoading } = useAuth();
   const router = useRouter();
 
   // Password strength indicators
@@ -26,14 +26,14 @@ export default function SignUp() {
   });
 
   useEffect(() => {
-    if (user && userProfile) {
-      if (!userProfile.onboardingCompleted) {
+    if (!authLoading && user) {
+      if (userProfile && !userProfile.onboardingCompleted) {
         router.push('/onboarding');
       } else {
         router.push('/dashboard');
       }
     }
-  }, [user, userProfile, router]);
+  }, [user, userProfile, authLoading, router]);
 
   useEffect(() => {
     setPasswordStrength({

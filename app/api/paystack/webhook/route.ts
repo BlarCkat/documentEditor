@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
               subscription_status: 'active',
               subscription_tier: 'pro',
             })
-            .eq('uid', event.data.customer.metadata.userId);
+            .eq('id',event.data.customer.metadata.userId);
         }
         break;
       case 'subscription.disable':
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
               subscription_status: 'cancelled',
               subscription_tier: 'free',
             })
-            .eq('uid', event.data.customer.metadata.userId);
+            .eq('id',event.data.customer.metadata.userId);
         }
         break;
       case 'charge.success':
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
               subscription_status: 'active',
               last_payment_date: new Date().toISOString(),
             })
-            .eq('uid', event.data.metadata.userId);
+            .eq('id',event.data.metadata.userId);
         }
         break;
     }

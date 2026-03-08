@@ -14,18 +14,18 @@ export default function SignIn() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
-  const { signIn, signInWithGoogle, resetPassword, user, userProfile } = useAuth();
+  const { signIn, signInWithGoogle, resetPassword, user, userProfile, loading: authLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (user && userProfile) {
-      if (!userProfile.onboardingCompleted) {
+    if (!authLoading && user) {
+      if (userProfile && !userProfile.onboardingCompleted) {
         router.push('/onboarding');
       } else {
         router.push('/dashboard');
       }
     }
-  }, [user, userProfile, router]);
+  }, [user, userProfile, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

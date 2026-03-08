@@ -26,7 +26,7 @@ export default function OnboardingPage() {
   }, [user, userProfile, loading, router]);
 
   // Show loading while checking auth state
-  if (loading || !user || !userProfile) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-white" />
