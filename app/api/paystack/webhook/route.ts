@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { supabase } from '@/lib/supabase';
 import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
@@ -23,17 +22,37 @@ export async function POST(request: NextRequest) {
       case 'subscription.create':
       case 'subscription.enable':
         // Handle subscription activation
+        if (event.data.customer?.metadata?.userId) {
+          await supabase
+            .from('users')
+            .update({
+              subscription_status: 'active',
+              subscription_tier: 'pro',
+            })
+            .eq('id',event.data.customer.metadata.userId);
+        }
         break;
       case 'subscription.disable':
         // Handle subscription cancellation
+        if (event.data.customer?.metadata?.userId) {
+          await supabase
+            .from('users')
+            .update({
+              subscription_status: 'cancelled',
+              subscription_tier: 'free',
+            })
+            .eq('id',event.data.customer.metadata.userId);
+        }
         break;
       case 'charge.success':
         if (event.data.metadata?.userId) {
-          const userRef = doc(db, 'users', event.data.metadata.userId);
-          await updateDoc(userRef, {
-            'subscription.status': 'active',
-            'subscription.lastPaymentDate': new Date(),
-          });
+          await supabase
+            .from('users')
+            .update({
+              subscription_status: 'active',
+              last_payment_date: new Date().toISOString(),
+            })
+            .eq('id',event.data.metadata.userId);
         }
         break;
     }

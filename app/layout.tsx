@@ -1,9 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider } from '@/lib/auth-context';
-import './globals.css';
+import { ThemeProvider } from '@/components/theme';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,29 +14,31 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#000000',
+};
+
 export const metadata: Metadata = {
-  title: "Superdocs",
-  description: "Just a really good document editor. Create and edit documents online. ",
+  metadataBase: new URL('https://enfinotes.com'),
+  title: "Enfinotes",
+  description: "The all-in-one content creation workspace for modern creators.",
   icons: {
     icon: '/favicon.ico',
   },
-  themeColor: '#000000',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-  },
   openGraph: {
-    title: "Superdocs",
-    description: "Just a really good document editor. Create and edit documents online. ",
+    title: "Enfinotes",
+    description: "The all-in-one content creation workspace for modern creators.",
     images: [
       { url: '/og-image.png' },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: "Superdocs",
-    description: "Just a really good document editor. Create and edit documents online. ",
+    title: "Enfinotes",
+    description: "The all-in-one content creation workspace for modern creators.",
     images: [
       { url: '/og-image.png' },
     ],
@@ -49,16 +50,17 @@ export const metadata: Metadata = {
     'max-image-preview': 'standard',
     'max-video-preview': 0,
   },
-
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
+        <ThemeProvider defaultTheme="dark">
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -14,14 +14,18 @@ export default function SignIn() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
-  const { signIn, signInWithGoogle, resetPassword, user } = useAuth();
+  const { signIn, signInWithGoogle, resetPassword, user, userProfile, loading: authLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (user) {
-      router.push('/');
+    if (!authLoading && user) {
+      if (userProfile && !userProfile.onboardingCompleted) {
+        router.push('/onboarding');
+      } else {
+        router.push('/dashboard');
+      }
     }
-  }, [user, router]);
+  }, [user, userProfile, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +34,7 @@ export default function SignIn() {
 
     try {
       await signIn(email, password);
-      router.push('/');
+      // Redirect will be handled by useEffect after userProfile loads
     } catch (err: any) {
       setError(err.message || 'Failed to sign in. Please check your credentials.');
     } finally {
