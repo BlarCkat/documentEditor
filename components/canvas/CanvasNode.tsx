@@ -229,7 +229,7 @@ export function NoteNode({ id, data, selected }: NodeProps<NoteNodeType>) {
 
   // ── Shared ··· context menu ─────────────────────────────────────────────────
   const ContextMenu = () => (
-    <div className="absolute right-0 top-7 w-56 bg-card border border-border rounded-lg shadow-2xl z-50 overflow-hidden py-1">
+    <div className="absolute right-0 top-full mt-1 w-56 bg-card border border-border rounded-lg shadow-2xl z-50 overflow-hidden py-1">
 
       {/* Enfin AI section */}
       <p className="px-3 pt-1.5 pb-1 text-[10px] font-medium text-muted-foreground/50 uppercase tracking-wider">
@@ -291,7 +291,7 @@ export function NoteNode({ id, data, selected }: NodeProps<NoteNodeType>) {
   return (
     <div
       className={cn(
-        'rounded-xl border shadow-md relative bg-card text-foreground overflow-hidden',
+        'rounded-xl border shadow-md relative bg-card text-foreground',
         nodeWidth,
         selected ? 'border-foreground/25 ring-1 ring-foreground/15' : 'border-border'
       )}
@@ -311,10 +311,10 @@ export function NoteNode({ id, data, selected }: NodeProps<NoteNodeType>) {
         </div>
       )}
 
-      {/* ··· context menu trigger */}
+      {/* ··· context menu trigger — outside overflow wrapper so menu escapes card bounds */}
       <div
         ref={menuRef}
-        className="absolute top-2 right-2 z-20 nodrag nopan"
+        className="absolute top-2 right-2 z-50 nodrag nopan"
         onMouseDown={(e) => e.stopPropagation()}
       >
         <button
@@ -328,6 +328,9 @@ export function NoteNode({ id, data, selected }: NodeProps<NoteNodeType>) {
         </button>
         {menuOpen && <ContextMenu />}
       </div>
+
+      {/* Inner wrapper clips rounded corners for images while menu overflows outside */}
+      <div className="overflow-hidden rounded-xl">
 
       {/* ─── NOTE ─── */}
       {postType === 'note' && (
@@ -622,6 +625,8 @@ export function NoteNode({ id, data, selected }: NodeProps<NoteNodeType>) {
           </div>
         </div>
       )}
+
+      </div>{/* end overflow-hidden inner wrapper */}
     </div>
   );
 }

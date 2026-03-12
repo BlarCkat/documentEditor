@@ -108,7 +108,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 {userProfile?.displayName || 'User'}
               </p>
               <p className="text-[11px] text-muted-foreground truncate">
-                {userProfile?.subscription.tier === 'free' ? 'Free plan' : 'Pro plan'}
+                {userProfile?.subscription?.tier === 'free' ? 'Free plan' : 'Pro plan'}
               </p>
             </div>
           )}
