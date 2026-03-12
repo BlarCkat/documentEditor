@@ -35,7 +35,7 @@ export default function OnboardingPage() {
   }
 
   // If onboarding is already completed, don't render the flow
-  if (userProfile.onboardingCompleted) {
+  if (userProfile?.onboardingCompleted) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-white" />
