@@ -32,7 +32,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   return (
-    <div className="flex h-screen bg-black">
+    <div className="flex h-screen bg-background">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={handleToggleSidebar} />
       <main className="flex-1 overflow-hidden">
         {children}

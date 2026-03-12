@@ -45,7 +45,7 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
+  --background: oklch(0.96 0 0);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);
@@ -79,37 +79,58 @@
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
+  --background: #151515;
+  --foreground: #f0f0f0;
+  --card: #1c1c1c;
+  --card-foreground: #f0f0f0;
+  --popover: #1c1c1c;
+  --popover-foreground: #f0f0f0;
+  --primary: #e8e8e8;
+  --primary-foreground: #1c1c1c;
+  --secondary: #252525;
+  --secondary-foreground: #f0f0f0;
+  --muted: #252525;
+  --muted-foreground: #888888;
+  --accent: #222222;
+  --accent-foreground: #f0f0f0;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: rgba(255, 255, 255, 0.2);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --sidebar: #1c1c1c;
+  --sidebar-foreground: #f0f0f0;
+  --sidebar-primary: #e8e8e8;
+  --sidebar-primary-foreground: #1c1c1c;
+  --sidebar-accent: #222222;
+  --sidebar-accent-foreground: #f0f0f0;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: rgba(255, 255, 255, 0.2);
+}
+
+/* React Flow theme overrides */
+.react-flow {
+  --xy-background-color-default: var(--background);
+  --xy-node-background-color-default: var(--card);
+  --xy-node-border-default: var(--border);
+  --xy-node-color-default: var(--foreground);
+  --xy-edge-stroke-default: var(--muted-foreground);
+  --xy-edge-stroke-selected-default: var(--foreground);
+  --xy-controls-background-color: var(--card);
+  --xy-controls-border-color: var(--border);
+  --xy-controls-button-background-color: var(--card);
+  --xy-controls-button-background-color-hover: var(--accent);
+  --xy-controls-button-color: var(--foreground);
+  --xy-controls-button-color-hover: var(--foreground);
+  --xy-controls-button-border-color: var(--border);
+  --xy-minimap-background-color-default: var(--card);
+  --xy-minimap-mask-background-color-default: var(--background);
+  --xy-selection-background-color-default: rgba(255, 255, 255, 0.05);
+  --xy-selection-border-default: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 @layer base {
@@ -119,4 +140,87 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ── Tiptap WYSIWYG editor ───────────────────────────────────────────── */
+.doc-editor .ProseMirror {
+  min-height: 320px;
+  outline: none;
+  color: #f0f0f0;
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  caret-color: #f0f0f0;
+}
+.doc-editor .ProseMirror > * + * { margin-top: 0.6em; }
+.doc-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #555;
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+.doc-editor .ProseMirror h1 { font-size: 1.6rem; font-weight: 700; line-height: 1.25; color: #f0f0f0; }
+.doc-editor .ProseMirror h2 { font-size: 1.25rem; font-weight: 600; line-height: 1.35; color: #f0f0f0; }
+.doc-editor .ProseMirror h3 { font-size: 1.05rem; font-weight: 600; color: #f0f0f0; }
+.doc-editor .ProseMirror strong { color: #f0f0f0; }
+.doc-editor .ProseMirror ul,
+.doc-editor .ProseMirror ol { padding-left: 1.5em; }
+.doc-editor .ProseMirror li { margin-bottom: 0.2em; }
+.doc-editor .ProseMirror blockquote {
+  border-left: 3px solid rgba(255,255,255,0.15);
+  padding-left: 1em;
+  color: #888;
+  font-style: italic;
+}
+.doc-editor .ProseMirror code {
+  background: rgba(255,255,255,0.08);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-size: 0.84em;
+  font-family: var(--font-mono);
+  color: #a0c4ff;
+}
+.doc-editor .ProseMirror pre {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 1em;
+  overflow-x: auto;
+}
+.doc-editor .ProseMirror pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.875em;
+}
+.doc-editor .ProseMirror hr {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  margin: 1.5em 0;
+}
+/* Images */
+.doc-editor .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+  margin: 0.75em 0;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.doc-editor .ProseMirror img.ProseMirror-selectednode {
+  outline: 2px solid rgba(160, 196, 255, 0.5);
+  outline-offset: 2px;
+}
+
+/* @ mention chip */
+.doc-editor .ProseMirror .mention {
+  display: inline-block;
+  background: rgba(160, 196, 255, 0.12);
+  border: 1px solid rgba(160, 196, 255, 0.2);
+  border-radius: 4px;
+  padding: 0 0.4em;
+  font-size: 0.875em;
+  color: #a0c4ff;
+  font-weight: 500;
+  cursor: default;
+  white-space: nowrap;
 }

@@ -1,5 +1,6 @@
 export { CanvasInterface } from './CanvasInterface';
-export { CanvasBackground } from './CanvasBackground';
-export { CanvasNode } from './CanvasNode';
-export { CanvasConnections } from './CanvasConnections';
+export { NoteNode } from './CanvasNode';
+export { AnimatedDotEdge } from './AnimatedEdge';
+export { WorkflowNode } from './WorkflowNode';
+export { SlashTextarea } from './SlashMenu';
 export { CanvasToolbar } from './CanvasToolbar';

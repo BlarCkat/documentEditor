@@ -1,229 +1,218 @@
 'use client';
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { useGesture } from '@use-gesture/react';
-import { CanvasBackground } from './CanvasBackground';
-import { CanvasNode } from './CanvasNode';
-import { CanvasConnections } from './CanvasConnections';
+import React, { useCallback, useEffect, useRef } from 'react';
+import {
+  ReactFlow,
+  ReactFlowProvider,
+  addEdge,
+  Background,
+  Controls,
+  useNodesState,
+  useEdgesState,
+  BackgroundVariant,
+  ConnectionMode,
+  useReactFlow,
+  type OnConnect,
+  type Edge,
+  type Node,
+  type NodeChange,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+
+import { NoteNode, type NoteNodeType } from './CanvasNode';
+import { AnimatedDotEdge } from './AnimatedEdge';
+import { WorkflowNode } from './WorkflowNode';
 import { CanvasToolbar } from './CanvasToolbar';
-import { Note, NoteConnection, CanvasViewport } from '@/types';
+import { useTheme } from '@/components/theme';
+import { useAuth } from '@/lib/auth-context';
+import { loadCanvasState, saveCanvasState } from '@/lib/canvas-store';
+import { Workflow } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export function CanvasInterface() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [viewport, setViewport] = useState<CanvasViewport>({ x: 0, y: 0, zoom: 1 });
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [connections, setConnections] = useState<NoteConnection[]>([]);
-  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
-  const [connecting, setConnecting] = useState<{ sourceId: string; x: number; y: number } | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
+const nodeTypes = { note: NoteNode, workflow: WorkflowNode };
+const edgeTypes = { animatedDot: AnimatedDotEdge };
 
-  // Pan and zoom with gestures
-  useGesture(
-    {
-      onDrag: ({ delta: [dx, dy], event }) => {
-        // Only pan if not dragging a node
-        if (!(event.target as HTMLElement).closest('[data-node]')) {
-          setViewport((prev) => ({
-            ...prev,
-            x: prev.x + dx,
-            y: prev.y + dy,
-          }));
-        }
-      },
-      onWheel: ({ delta: [, dy], event }) => {
-        event.preventDefault();
-        const zoomFactor = dy > 0 ? 0.95 : 1.05;
-        setViewport((prev) => ({
-          ...prev,
-          zoom: Math.min(Math.max(prev.zoom * zoomFactor, 0.25), 2),
-        }));
-      },
-      onPinch: ({ offset: [scale] }) => {
-        setViewport((prev) => ({
-          ...prev,
-          zoom: Math.min(Math.max(scale, 0.25), 2),
-        }));
-      },
-    },
-    {
-      target: containerRef,
-      drag: { filterTaps: true },
-      wheel: { eventOptions: { passive: false } },
-      pinch: { scaleBounds: { min: 0.25, max: 2 } },
+function Canvas() {
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const { theme } = useTheme();
+  const defaultEdgeOptions = React.useMemo(
+    () => ({ type: 'animatedDot', data: { theme } }),
+    [theme]
+  );
+  const { user } = useAuth();
+  const { fitView } = useReactFlow();
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loaded = useRef(false);
+
+  // ── Load persisted state once user is available ──────────────────────────
+  useEffect(() => {
+    if (!user || loaded.current) return;
+    loaded.current = true;
+    const { nodes: saved, edges: savedEdges } = loadCanvasState(user.id);
+    if (saved.length > 0 || savedEdges.length > 0) {
+      setNodes(saved);
+      setEdges(savedEdges);
+      requestAnimationFrame(() => fitView({ padding: 0.3, maxZoom: 1 }));
     }
+  }, [user, setNodes, setEdges, fitView]);
+
+  // ── Debounced save ────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!user || !loaded.current) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => saveCanvasState(user.id, nodes, edges), 600);
+    return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
+  }, [nodes, edges, user]);
+
+  // ── Connect ───────────────────────────────────────────────────────────────
+  const onConnect: OnConnect = useCallback(
+    (connection) => setEdges((eds) => addEdge(connection, eds)),
+    [setEdges]
   );
 
+  // ── Add note ──────────────────────────────────────────────────────────────
   const addNote = useCallback(() => {
-    const containerRect = containerRef.current?.getBoundingClientRect();
-    const centerX = containerRect ? containerRect.width / 2 : 400;
-    const centerY = containerRect ? containerRect.height / 2 : 300;
+    const id = `note-${Date.now()}`;
+    setNodes((prev) => [
+      ...prev,
+      {
+        id,
+        type: 'note',
+        position: { x: Math.random() * 300 + 100, y: Math.random() * 200 + 100 },
+        data: { title: 'New Note', content: '', postType: 'note', createdAt: new Date().toISOString() },
+      } as NoteNodeType,
+    ]);
+  }, [setNodes]);
 
-    // Convert screen position to canvas position
-    const canvasX = (centerX - viewport.x) / viewport.zoom;
-    const canvasY = (centerY - viewport.y) / viewport.zoom;
+  // ── Add document ──────────────────────────────────────────────────────────
+  const addDocument = useCallback(() => {
+    const id = `note-${Date.now()}`;
+    setNodes((prev) => [
+      ...prev,
+      {
+        id,
+        type: 'note',
+        position: { x: Math.random() * 300 + 100, y: Math.random() * 200 + 100 },
+        data: { title: 'New Document', content: '', postType: 'document', createdAt: new Date().toISOString() },
+      } as NoteNodeType,
+    ]);
+  }, [setNodes]);
 
-    const newNote: Note = {
-      id: Date.now().toString(),
-      userId: '',
-      title: 'New Note',
-      content: '',
-      position: { x: canvasX - 150, y: canvasY - 100 },
-      size: { width: 300, height: 200 },
-      color: '#1a1a1a',
-      createdAt: new Date(),
-      updatedAt: new Date(),
+  // ── Group selected notes as workflow ─────────────────────────────────────
+  const createWorkflow = useCallback(() => {
+    const selected = nodes.filter((n) => n.selected && n.type !== 'workflow');
+    if (selected.length < 2) return;
+
+    const PAD = 44;
+    const xs      = selected.map((n) => n.position.x);
+    const ys      = selected.map((n) => n.position.y);
+    const rights  = selected.map((n) => n.position.x + (n.measured?.width  ?? 256));
+    const bottoms = selected.map((n) => n.position.y + (n.measured?.height ?? 200));
+
+    const minX = Math.min(...xs)      - PAD;
+    const minY = Math.min(...ys)      - PAD;
+    const maxX = Math.max(...rights)  + PAD;
+    const maxY = Math.max(...bottoms) + PAD;
+
+    const wId  = `workflow-${Date.now()}`;
+    const wW   = maxX - minX;
+    const wH   = maxY - minY;
+
+    const workflowNode: Node = {
+      id:   wId,
+      type: 'workflow',
+      position: { x: minX, y: minY },
+      data: { name: 'Workflow' },
+      style: { width: wW, height: wH },
+      zIndex: -1,
+      selectable: true,
+      draggable:  true,
     };
 
-    setNotes((prev) => [...prev, newNote]);
-    setSelectedNoteId(newNote.id);
-  }, [viewport]);
-
-  const updateNote = useCallback((id: string, updates: Partial<Note>) => {
-    setNotes((prev) =>
-      prev.map((note) =>
-        note.id === id ? { ...note, ...updates, updatedAt: new Date() } : note
-      )
-    );
-  }, []);
-
-  const deleteNote = useCallback((id: string) => {
-    setNotes((prev) => prev.filter((note) => note.id !== id));
-    setConnections((prev) =>
-      prev.filter((conn) => conn.sourceNoteId !== id && conn.targetNoteId !== id)
-    );
-    if (selectedNoteId === id) {
-      setSelectedNoteId(null);
-    }
-  }, [selectedNoteId]);
-
-  const startConnection = useCallback((sourceId: string, x: number, y: number) => {
-    setConnecting({ sourceId, x, y });
-  }, []);
-
-  const endConnection = useCallback((targetId: string) => {
-    if (connecting && connecting.sourceId !== targetId) {
-      // Check if connection already exists
-      const exists = connections.some(
-        (c) =>
-          (c.sourceNoteId === connecting.sourceId && c.targetNoteId === targetId) ||
-          (c.sourceNoteId === targetId && c.targetNoteId === connecting.sourceId)
-      );
-
-      if (!exists) {
-        const newConnection: NoteConnection = {
-          id: Date.now().toString(),
-          sourceNoteId: connecting.sourceId,
-          targetNoteId: targetId,
-          createdAt: new Date(),
+    setNodes((prev) => {
+      const updated = prev.map((n) => {
+        if (!n.selected || n.type === 'workflow') return n;
+        return {
+          ...n,
+          parentId: wId,
+          extent: 'parent' as const,
+          position: { x: n.position.x - minX, y: n.position.y - minY },
+          selected: false,
         };
-        setConnections((prev) => [...prev, newConnection]);
-      }
-    }
-    setConnecting(null);
-  }, [connecting, connections]);
+      });
+      return [workflowNode, ...updated];
+    });
+  }, [nodes, setNodes]);
 
-  const cancelConnection = useCallback(() => {
-    setConnecting(null);
-  }, []);
-
-  const deleteConnection = useCallback((id: string) => {
-    setConnections((prev) => prev.filter((conn) => conn.id !== id));
-  }, []);
-
-  const handleZoomIn = () => {
-    setViewport((prev) => ({ ...prev, zoom: Math.min(prev.zoom * 1.2, 2) }));
-  };
-
-  const handleZoomOut = () => {
-    setViewport((prev) => ({ ...prev, zoom: Math.max(prev.zoom / 1.2, 0.25) }));
-  };
-
-  const handleResetView = () => {
-    setViewport({ x: 0, y: 0, zoom: 1 });
-  };
-
-  // Handle click on canvas to deselect
-  const handleCanvasClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget || (e.target as HTMLElement).closest('[data-background]')) {
-      setSelectedNoteId(null);
-      cancelConnection();
-    }
-  };
-
-  // Handle mouse move for connection preview
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (connecting) {
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (rect) {
-        setConnecting((prev) => prev ? {
-          ...prev,
-          x: (e.clientX - rect.left - viewport.x) / viewport.zoom,
-          y: (e.clientY - rect.top - viewport.y) / viewport.zoom,
-        } : null);
-      }
-    }
-  }, [connecting, viewport]);
+  // How many note-type nodes are selected
+  const selectedNoteCount = nodes.filter((n) => n.selected && n.type !== 'workflow').length;
 
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full h-full overflow-hidden bg-[#0a0a0a] cursor-grab active:cursor-grabbing"
-      onClick={handleCanvasClick}
-      onMouseMove={handleMouseMove}
-      onMouseUp={cancelConnection}
-    >
-      {/* Background */}
-      <CanvasBackground viewport={viewport} />
-
-      {/* Canvas content */}
-      <div
-        className="absolute inset-0 origin-top-left"
-        style={{
-          transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`,
-        }}
+    <div className="w-full h-full relative">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        colorMode={theme}
+        defaultEdgeOptions={defaultEdgeOptions}
+        connectionMode={ConnectionMode.Loose}
+        isValidConnection={() => true}
+        fitView
+        fitViewOptions={{ padding: 0.5, maxZoom: 1 }}
+        minZoom={0.2}
+        maxZoom={2}
+        deleteKeyCode={['Delete', 'Backspace']}
+        className="bg-background"
       >
-        {/* Connections */}
-        <CanvasConnections
-          connections={connections}
-          notes={notes}
-          connecting={connecting}
-          onDelete={deleteConnection}
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={24}
+          size={1.5}
+          color={theme === 'dark' ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.1)'}
         />
+        <Controls
+          position="bottom-left"
+          style={{ marginBottom: '1.5rem', marginLeft: '1rem' }}
+        />
+      </ReactFlow>
 
-        {/* Notes */}
-        {notes.map((note) => (
-          <CanvasNode
-            key={note.id}
-            note={note}
-            isSelected={selectedNoteId === note.id}
-            onSelect={() => setSelectedNoteId(note.id)}
-            onUpdate={(updates) => updateNote(note.id, updates)}
-            onDelete={() => deleteNote(note.id)}
-            onStartConnection={startConnection}
-            onEndConnection={endConnection}
-            viewport={viewport}
-          />
-        ))}
-      </div>
+      {/* Workflow selection toolbar */}
+      {selectedNoteCount >= 2 && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5 px-3 py-2 bg-card border border-border rounded-lg shadow-xl">
+          <span className="text-xs text-muted-foreground">{selectedNoteCount} notes selected</span>
+          <button
+            onClick={createWorkflow}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-foreground text-background text-xs font-medium rounded-md hover:opacity-90 active:scale-95 transition-all"
+          >
+            <Workflow className="w-3.5 h-3.5" />
+            Group as Workflow
+          </button>
+        </div>
+      )}
 
-      {/* Toolbar */}
-      <CanvasToolbar
-        onAddNote={addNote}
-        onZoomIn={handleZoomIn}
-        onZoomOut={handleZoomOut}
-        onResetView={handleResetView}
-        zoom={viewport.zoom}
-      />
+      <CanvasToolbar onAddNote={addNote} onAddDocument={addDocument} />
 
-      {/* Empty state */}
-      {notes.length === 0 && (
+      {nodes.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="text-center">
-            <h2 className="text-2xl font-semibold text-white mb-2">Your canvas is empty</h2>
-            <p className="text-gray-400 mb-4">Click the + button to add your first note</p>
+            <p className="text-base font-medium text-foreground mb-1">Your canvas is empty</p>
+            <p className="text-sm text-muted-foreground">Click Add Note or Add Document to get started</p>
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+export function CanvasInterface() {
+  return (
+    <ReactFlowProvider>
+      <Canvas />
+    </ReactFlowProvider>
   );
 }

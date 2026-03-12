@@ -57,6 +57,9 @@ export interface UserProfile {
   sidebarCollapsed: boolean;
 }
 
+// Canvas / post types
+export type PostType = 'note' | 'document' | 'twitter' | 'instagram' | 'linkedin';
+
 // Canvas types
 export interface Note {
   id: string;

@@ -2,20 +2,20 @@
 
 import React, { useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { useTheme, ThemeToggle } from '@/components/theme';
+import { ThemeToggle } from '@/components/theme';
 import { cn } from '@/lib/utils';
 import {
   BookOpen,
   Home,
+  BarChart2,
   FileText,
-  MessageSquare,
   Settings,
   LogOut,
   ChevronLeft,
   ChevronRight,
   Plus,
-  Layout,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -25,9 +25,8 @@ interface SidebarProps {
 
 export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const { user, userProfile, signOut } = useAuth();
-  const { theme } = useTheme();
+  const pathname = usePathname();
 
-  // Keyboard shortcut to toggle sidebar
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
@@ -35,7 +34,6 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         onToggle();
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onToggle]);
@@ -49,70 +47,67 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   };
 
   const navItems = [
-    { href: '/dashboard', icon: Home, label: 'Home' },
-    { href: '/dashboard/documents', icon: FileText, label: 'Documents' },
-    { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
+    { href: '/dashboard',            icon: Home,     label: 'Home'      },
+    { href: '/dashboard/analytics',  icon: BarChart2, label: 'Analytics' },
+    { href: '/dashboard/notes',      icon: FileText,  label: 'Notes'     },
+    { href: '/dashboard/settings',   icon: Settings,  label: 'Settings'  },
   ];
 
   return (
     <aside
       className={cn(
         'h-screen flex flex-col border-r transition-all duration-300',
-        'bg-[#0a0a0a] border-white/10',
-        isCollapsed ? 'w-16' : 'w-64'
+        'bg-card border-border',
+        isCollapsed ? 'w-14' : 'w-56'
       )}
     >
       {/* Header */}
-      <div className="p-4 flex items-center justify-between border-b border-white/10">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
-            <BookOpen className="w-4 h-4 text-white" />
+      <div className="px-3 py-2.5 flex items-center justify-between border-b border-border">
+        <Link href="/dashboard" className="flex items-center gap-2 min-w-0">
+          <div className="w-7 h-7 bg-accent rounded-md flex items-center justify-center flex-shrink-0">
+            <BookOpen className="w-3.5 h-3.5 text-foreground" />
           </div>
           {!isCollapsed && (
-            <span className="text-white font-medium">Enfinotes</span>
+            <span className="text-foreground text-sm font-semibold truncate">Enfinotes</span>
           )}
         </Link>
         <button
           onClick={onToggle}
           className={cn(
-            'p-1.5 rounded-lg hover:bg-white/10 transition-colors text-gray-400',
-            isCollapsed && 'absolute left-4 top-4'
+            'p-1 rounded-md hover:bg-accent transition-colors text-muted-foreground flex-shrink-0',
+            isCollapsed && 'absolute left-3 top-2.5'
           )}
           aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {isCollapsed ? (
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-3.5 h-3.5" />
           ) : (
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-3.5 h-3.5" />
           )}
         </button>
       </div>
 
       {/* User section */}
       <div className={cn(
-        'p-4 border-b border-white/10',
+        'px-3 py-2 border-b border-border',
         isCollapsed && 'flex justify-center'
       )}>
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-indigo-500/30 flex items-center justify-center flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
             {userProfile?.photoURL ? (
-              <img
-                src={userProfile.photoURL}
-                alt=""
-                className="w-8 h-8 rounded-full"
-              />
+              <img src={userProfile.photoURL} alt="" className="w-7 h-7 rounded-full" />
             ) : (
-              <span className="text-sm font-medium text-indigo-400">
+              <span className="text-xs font-medium text-indigo-400">
                 {userProfile?.displayName?.charAt(0) || user?.email?.charAt(0) || '?'}
               </span>
             )}
           </div>
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">
+              <p className="text-xs font-medium text-foreground truncate">
                 {userProfile?.displayName || 'User'}
               </p>
-              <p className="text-xs text-gray-500 truncate">
+              <p className="text-[11px] text-muted-foreground truncate">
                 {userProfile?.subscription.tier === 'free' ? 'Free plan' : 'Pro plan'}
               </p>
             </div>
@@ -121,85 +116,63 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       </div>
 
       {/* New button */}
-      <div className="p-3">
+      <div className="px-2 py-2">
         <button
           className={cn(
-            'w-full flex items-center gap-2 p-2.5 rounded-lg bg-white/10 hover:bg-white/15 transition-colors text-white',
+            'w-full flex items-center gap-2 px-2 py-1.5 rounded-md bg-accent hover:bg-accent/70 transition-colors text-foreground text-xs',
             isCollapsed && 'justify-center'
           )}
         >
-          <Plus className="w-4 h-4" />
-          {!isCollapsed && <span className="text-sm">New</span>}
+          <Plus className="w-3.5 h-3.5 flex-shrink-0" />
+          {!isCollapsed && <span>New</span>}
         </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              'flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors',
-              isCollapsed && 'justify-center px-2'
-            )}
-          >
-            <item.icon className="w-4 h-4 flex-shrink-0" />
-            {!isCollapsed && <span className="text-sm">{item.label}</span>}
-          </Link>
-        ))}
-
-        {/* Chats section */}
-        {!isCollapsed && (
-          <div className="pt-4">
-            <div className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
-              <MessageSquare className="w-3 h-3" />
-              Chats
-            </div>
-            <div className="space-y-1 mt-1">
-              <div className="px-3 py-2 text-sm text-gray-500">
-                No chats yet
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Notes section */}
-        {!isCollapsed && (
-          <div className="pt-4">
-            <div className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
-              <Layout className="w-3 h-3" />
-              Notes
-            </div>
-            <div className="space-y-1 mt-1">
-              <div className="px-3 py-2 text-sm text-gray-500">
-                No notes yet
-              </div>
-            </div>
-          </div>
-        )}
+      <nav className="flex-1 px-2 space-y-0.5 overflow-y-auto">
+        {navItems.map((item) => {
+          const isActive = item.href === '/dashboard'
+            ? pathname === '/dashboard'
+            : pathname.startsWith(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'flex items-center gap-2.5 px-2 py-1.5 rounded-md transition-colors text-xs',
+                isActive
+                  ? 'bg-accent text-foreground font-medium'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent',
+                isCollapsed && 'justify-center'
+              )}
+            >
+              <item.icon className="w-3.5 h-3.5 flex-shrink-0" />
+              {!isCollapsed && <span>{item.label}</span>}
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Footer */}
-      <div className="p-3 border-t border-white/10 space-y-1">
+      <div className="px-2 py-2 border-t border-border space-y-0.5">
         <div className={cn(
-          'flex items-center',
-          isCollapsed ? 'justify-center' : 'justify-between px-3'
+          'flex items-center px-2 py-1',
+          isCollapsed ? 'justify-center' : 'justify-between'
         )}>
           {!isCollapsed && (
-            <span className="text-xs text-gray-500">Theme</span>
+            <span className="text-[11px] text-muted-foreground">Theme</span>
           )}
           <ThemeToggle />
         </div>
         <button
           onClick={handleSignOut}
           className={cn(
-            'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors',
-            isCollapsed && 'justify-center px-2'
+            'w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors text-xs',
+            isCollapsed && 'justify-center'
           )}
         >
-          <LogOut className="w-4 h-4 flex-shrink-0" />
-          {!isCollapsed && <span className="text-sm">Sign out</span>}
+          <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
+          {!isCollapsed && <span>Sign out</span>}
         </button>
       </div>
     </aside>

@@ -13,9 +13,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const useTheme = () => {
   const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
+  if (!context) throw new Error('useTheme must be used within a ThemeProvider');
   return context;
 };
 
@@ -25,47 +23,35 @@ interface ThemeProviderProps {
   storageKey?: string;
 }
 
+function getInitialTheme(defaultTheme: ThemePreference, storageKey: string): ThemePreference {
+  if (typeof window === 'undefined') return defaultTheme;
+  try {
+    const stored = localStorage.getItem(storageKey) as ThemePreference | null;
+    if (stored === 'dark' || stored === 'light') return stored;
+  } catch {}
+  return defaultTheme;
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = 'dark',
   storageKey = 'enfinotes-theme',
 }: ThemeProviderProps) {
-  const [theme, setThemeState] = useState<ThemePreference>(defaultTheme);
-  const [mounted, setMounted] = useState(false);
+  const [theme, setThemeState] = useState<ThemePreference>(() =>
+    getInitialTheme(defaultTheme, storageKey)
+  );
 
   useEffect(() => {
-    setMounted(true);
-    const stored = localStorage.getItem(storageKey) as ThemePreference | null;
-    if (stored && (stored === 'dark' || stored === 'light')) {
-      setThemeState(stored);
-    }
-  }, [storageKey]);
-
-  useEffect(() => {
-    if (!mounted) return;
-
     const root = document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
-    localStorage.setItem(storageKey, theme);
-  }, [theme, mounted, storageKey]);
+    try {
+      localStorage.setItem(storageKey, theme);
+    } catch {}
+  }, [theme, storageKey]);
 
-  const setTheme = (newTheme: ThemePreference) => {
-    setThemeState(newTheme);
-  };
-
-  const toggleTheme = () => {
-    setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
-
-  // Prevent flash of wrong theme
-  if (!mounted) {
-    return (
-      <div style={{ visibility: 'hidden' }}>
-        {children}
-      </div>
-    );
-  }
+  const setTheme = (newTheme: ThemePreference) => setThemeState(newTheme);
+  const toggleTheme = () => setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'));
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
