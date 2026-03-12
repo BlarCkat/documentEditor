@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { BubbleMenu, type Editor } from '@tiptap/react';
+import React, { useState, useEffect, useRef } from 'react';
+import type { Editor } from '@tiptap/react';
 import { Bold, Italic, Strikethrough, Code, Sparkles, Loader2, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AIAction } from './AIMenu';
@@ -47,12 +47,53 @@ interface BubbleToolbarProps {
 }
 
 export function BubbleToolbar({ editor, onAIAction, aiLoading }: BubbleToolbarProps) {
+  const [visible, setVisible] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
   const [showAI, setShowAI] = useState(false);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const update = () => {
+      const { from, to, empty } = editor.state.selection;
+      if (empty) {
+        setVisible(false);
+        setShowAI(false);
+        return;
+      }
+
+      const start = editor.view.coordsAtPos(from);
+      const end   = editor.view.coordsAtPos(to);
+      const midX  = (start.left + end.left) / 2;
+      const topY  = Math.min(start.top, end.top);
+
+      setPos({ top: topY - 52, left: midX });
+      setVisible(true);
+    };
+
+    editor.on('selectionUpdate', update);
+    editor.on('transaction', update);
+    return () => {
+      editor.off('selectionUpdate', update);
+      editor.off('transaction', update);
+    };
+  }, [editor]);
+
+  useEffect(() => {
+    if (!visible) setShowAI(false);
+  }, [visible]);
+
+  if (!visible) return null;
 
   return (
-    <BubbleMenu
-      editor={editor}
-      tippyOptions={{ duration: 120, placement: 'top', zIndex: 9990, offset: [0, 8] }}
+    <div
+      ref={toolbarRef}
+      style={{
+        position: 'fixed',
+        top: pos.top,
+        left: pos.left,
+        transform: 'translateX(-50%)',
+        zIndex: 9990,
+      }}
     >
       <div className="flex items-center gap-0.5 px-1.5 py-1.5 bg-[#111] border border-[rgba(255,255,255,0.1)] rounded-xl shadow-2xl backdrop-blur-sm">
         {/* Formatting */}
@@ -103,6 +144,6 @@ export function BubbleToolbar({ editor, onAIAction, aiLoading }: BubbleToolbarPr
           </div>
         )}
       </div>
-    </BubbleMenu>
+    </div>
   );
 }
