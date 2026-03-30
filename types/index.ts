@@ -37,6 +37,15 @@ export interface OnboardingData {
   themePreference: ThemePreference;
 }
 
+export interface SocialAccount {
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt?: Date;
+  userId: string;
+  username: string;
+  connectedAt: Date;
+}
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -55,6 +64,12 @@ export interface UserProfile {
   interfaceStyle: InterfaceStyle;
   themePreference: ThemePreference;
   sidebarCollapsed: boolean;
+  // Social media integrations
+  socialAccounts?: {
+    twitter?: SocialAccount;
+    instagram?: SocialAccount;
+    linkedin?: SocialAccount;
+  };
 }
 
 // Canvas / post types

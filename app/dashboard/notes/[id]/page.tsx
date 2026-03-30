@@ -9,7 +9,7 @@ import type { MentionItem } from '@/components/editor/MentionList';
 import { cn } from '@/lib/utils';
 import type { NoteNodeData } from '@/components/canvas/CanvasNode';
 import type { PostType } from '@/types';
-import { ArrowLeft, BookOpen, FileText, Check } from 'lucide-react';
+import { ArrowLeft, BookOpen, FileText, Check, Share2, Loader2, X } from 'lucide-react';
 import { FaXTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa6';
 import type { Node } from '@xyflow/react';
 
@@ -37,6 +37,7 @@ export default function NoteDetailPage() {
   const [mentionItems, setMentionItems] = useState<MentionItem[]>([]);
   const [saved,       setSaved]       = useState(false);
   const [notFound,    setNotFound]    = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
 
   // ── Load note ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -140,6 +141,18 @@ export default function NoteDetailPage() {
           {meta.label}
         </span>
 
+        {/* Publish button (for social posts) */}
+        {['twitter', 'instagram', 'linkedin'].includes(postType) && (
+          <button
+            onClick={() => setPublishOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-foreground text-background text-xs font-medium rounded-lg hover:opacity-90 transition-colors flex-shrink-0"
+            title="Publish to social media"
+          >
+            <Share2 className="w-3 h-3" />
+            <span className="hidden sm:inline">Publish</span>
+          </button>
+        )}
+
         {/* Save indicator */}
         <div className={cn(
           'flex items-center gap-1 text-[11px] transition-opacity flex-shrink-0',
@@ -164,6 +177,201 @@ export default function NoteDetailPage() {
           }
           showToolbar
         />
+      </div>
+
+      {/* ── Publish Modal ── */}
+      <PublishModal
+        isOpen={publishOpen}
+        onClose={() => setPublishOpen(false)}
+        noteId={id}
+        userProfile={user}
+        onPublish={() => {
+          setPublishOpen(false);
+          setSaved(true);
+          setTimeout(() => setSaved(false), 2000);
+        }}
+      />
+    </div>
+  );
+}
+
+// ── Publish Modal Component ────────────────────────────────────────────────────
+interface PublishModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  noteId: string;
+  userProfile: any;
+  onPublish: () => void;
+}
+
+function PublishModal({ isOpen, onClose, noteId, userProfile, onPublish }: PublishModalProps) {
+  const [platforms, setPlatforms] = useState<Array<'twitter' | 'instagram' | 'linkedin'>>([]);
+  const [immediate, setImmediate] = useState(true);
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('09:00');
+  const [publishing, setPublishing] = useState(false);
+  const [error, setError] = useState('');
+
+  const socialAccounts = userProfile?.socialAccounts || {};
+
+  const handlePublish = async () => {
+    if (platforms.length === 0) {
+      setError('Select at least one platform');
+      return;
+    }
+
+    setPublishing(true);
+    setError('');
+
+    try {
+      const payload: any = {
+        noteId,
+        platforms,
+        immediate,
+      };
+
+      if (!immediate && scheduledDate) {
+        const dt = new Date(`${scheduledDate}T${scheduledTime}`);
+        payload.scheduledFor = dt.toISOString();
+      }
+
+      const response = await fetch('/api/social/post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Publishing failed');
+      }
+
+      onPublish();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to publish');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="relative w-full max-w-md bg-card border border-border rounded-2xl overflow-hidden shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Publish post</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Select platforms and timing</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Platforms */}
+        <div className="p-6 space-y-3 border-b border-border">
+          <p className="text-xs font-medium text-foreground">Post to:</p>
+          <div className="space-y-2">
+            {['twitter', 'instagram', 'linkedin'].map((platform) => (
+              <label
+                key={platform}
+                className="flex items-center gap-2 p-2.5 rounded-md bg-accent/50 hover:bg-accent cursor-pointer transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  checked={platforms.includes(platform as any)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setPlatforms([...platforms, platform as 'twitter' | 'instagram' | 'linkedin']);
+                    } else {
+                      setPlatforms(platforms.filter((p) => p !== platform));
+                    }
+                  }}
+                  disabled={!socialAccounts[platform]}
+                  className="w-4 h-4 cursor-pointer"
+                />
+                <span className="text-xs font-medium text-foreground flex-1">
+                  {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                </span>
+                {socialAccounts[platform] ? (
+                  <span className="text-[10px] text-green-400">Connected</span>
+                ) : (
+                  <span className="text-[10px] text-muted-foreground">Not connected</span>
+                )}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Timing */}
+        <div className="p-6 space-y-4 border-b border-border">
+          <p className="text-xs font-medium text-foreground">When to post:</p>
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                checked={immediate}
+                onChange={() => setImmediate(true)}
+                className="w-4 h-4 cursor-pointer"
+              />
+              <span className="text-xs text-foreground">Post immediately</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                checked={!immediate}
+                onChange={() => setImmediate(false)}
+                className="w-4 h-4 cursor-pointer"
+              />
+              <span className="text-xs text-foreground">Schedule for later</span>
+            </label>
+          </div>
+          {!immediate && (
+            <div className="flex gap-2 pt-2">
+              <input
+                type="date"
+                value={scheduledDate}
+                onChange={(e) => setScheduledDate(e.target.value)}
+                className="flex-1 px-2.5 py-2 bg-background border border-border rounded-md text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              />
+              <input
+                type="time"
+                value={scheduledTime}
+                onChange={(e) => setScheduledTime(e.target.value)}
+                className="w-20 px-2.5 py-2 bg-background border border-border rounded-md text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Error */}
+        {error && (
+          <p className="px-6 pt-4 text-xs text-red-400">{error}</p>
+        )}
+
+        {/* Footer */}
+        <div className="px-6 pb-6 pt-4">
+          <button
+            onClick={handlePublish}
+            disabled={publishing}
+            className="w-full h-11 bg-foreground text-background rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+          >
+            {publishing ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Publishing...</>
+            ) : (
+              <>Publish</>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -8,8 +8,9 @@ import { usePaystackPayment } from 'react-paystack';
 import {
   User, Palette, Bell, Shield,
   Check, Loader2, Sun, Moon, MessageSquare, Grid3x3,
-  ChevronRight, X, Zap, Star, LogOut,
+  ChevronRight, X, Zap, Star, LogOut, Link as LinkIcon,
 } from 'lucide-react';
+import { FaXTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa6';
 import type { InterfaceStyle, UserRole, SubscriptionTier } from '@/types';
 import { supabase } from '@/lib/supabase';
 
@@ -336,6 +337,32 @@ export default function SettingsPage() {
     await refreshUserProfile();
   };
 
+  const disconnectPlatform = async (platform: 'twitter' | 'instagram' | 'linkedin') => {
+    if (!userProfile?.socialAccounts?.[platform]) return;
+
+    try {
+      const { data: currentUser } = await supabase
+        .from('users')
+        .select('social_accounts')
+        .eq('id', user?.id)
+        .single();
+
+      if (currentUser) {
+        const updated = { ...currentUser.social_accounts };
+        delete updated[platform];
+
+        await supabase
+          .from('users')
+          .update({ social_accounts: updated })
+          .eq('id', user?.id);
+
+        await refreshUserProfile();
+      }
+    } catch (error) {
+      console.error(`Failed to disconnect ${platform}:`, error);
+    }
+  };
+
   const tier = userProfile?.subscription.tier ?? 'free';
   const tierLabel = tier === 'pro' ? 'Pro' : tier === 'basic' ? 'Basic' : 'Free';
   const isPaid = tier === 'basic' || tier === 'pro';
@@ -478,6 +505,113 @@ export default function SettingsPage() {
               </div>
             </div>
           )}
+        </Section>
+
+        {/* ── Social Media Integrations ── */}
+        <Section title="Social Media" description="Connect your social accounts to publish posts">
+          <div className="space-y-3 p-5">
+            {/* Twitter */}
+            <div className="flex items-center justify-between p-3 bg-accent/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-sky-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FaXTwitter className="w-4 h-4 text-sky-400" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-foreground">Twitter/X</p>
+                  {userProfile?.socialAccounts?.twitter ? (
+                    <p className="text-[11px] text-green-400">
+                      Connected as @{userProfile.socialAccounts.twitter.username}
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground">Not connected</p>
+                  )}
+                </div>
+              </div>
+              {userProfile?.socialAccounts?.twitter ? (
+                <button
+                  onClick={() => disconnectPlatform('twitter')}
+                  className="px-2.5 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                >
+                  Disconnect
+                </button>
+              ) : (
+                <button
+                  onClick={() => window.location.href = '/api/auth/twitter/login'}
+                  className="px-2.5 py-1.5 text-xs font-medium text-white bg-foreground hover:opacity-90 rounded-lg transition-colors"
+                >
+                  Connect
+                </button>
+              )}
+            </div>
+
+            {/* Instagram */}
+            <div className="flex items-center justify-between p-3 bg-accent/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-pink-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FaInstagram className="w-4 h-4 text-pink-400" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-foreground">Instagram</p>
+                  {userProfile?.socialAccounts?.instagram ? (
+                    <p className="text-[11px] text-green-400">
+                      Connected as @{userProfile.socialAccounts.instagram.username}
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground">Not connected</p>
+                  )}
+                </div>
+              </div>
+              {userProfile?.socialAccounts?.instagram ? (
+                <button
+                  onClick={() => disconnectPlatform('instagram')}
+                  className="px-2.5 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                >
+                  Disconnect
+                </button>
+              ) : (
+                <button
+                  onClick={() => window.location.href = '/api/auth/instagram/login'}
+                  className="px-2.5 py-1.5 text-xs font-medium text-white bg-foreground hover:opacity-90 rounded-lg transition-colors"
+                >
+                  Connect
+                </button>
+              )}
+            </div>
+
+            {/* LinkedIn */}
+            <div className="flex items-center justify-between p-3 bg-accent/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-blue-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FaLinkedin className="w-4 h-4 text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-foreground">LinkedIn</p>
+                  {userProfile?.socialAccounts?.linkedin ? (
+                    <p className="text-[11px] text-green-400">
+                      Connected as {userProfile.socialAccounts.linkedin.username}
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground">Not connected</p>
+                  )}
+                </div>
+              </div>
+              {userProfile?.socialAccounts?.linkedin ? (
+                <button
+                  onClick={() => disconnectPlatform('linkedin')}
+                  className="px-2.5 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                >
+                  Disconnect
+                </button>
+              ) : (
+                <button
+                  onClick={() => window.location.href = '/api/auth/linkedin/login'}
+                  className="px-2.5 py-1.5 text-xs font-medium text-white bg-foreground hover:opacity-90 rounded-lg transition-colors"
+                >
+                  Connect
+                </button>
+              )}
+            </div>
+          </div>
         </Section>
 
         {/* ── Notifications ── */}
