@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { GeistSans } from 'geist/font/sans';
-import { BookOpen, Mail, Lock, User, AlertCircle, Loader2, Check } from 'lucide-react';
+import { BookOpen, Mail, Lock, User, AlertCircle, Loader2, Check, MailCheck } from 'lucide-react';
 
 export default function SignUp() {
   const [displayName, setDisplayName] = useState('');
@@ -15,6 +15,7 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const { signUp, signInWithGoogle, user, userProfile, loading: authLoading } = useAuth();
   const router = useRouter();
 
@@ -89,7 +90,7 @@ export default function SignUp() {
 
     try {
       await signUp(email, password, displayName);
-      // Redirect will be handled by useEffect after userProfile loads
+      setEmailSent(true);
     } catch (err: any) {
       setError(err.message || 'Failed to create account. Please try again.');
     } finally {
@@ -109,6 +110,46 @@ export default function SignUp() {
       setLoading(false);
     }
   };
+
+  if (emailSent) {
+    return (
+      <div className={`${GeistSans.className} bg-black text-[#8a8f98] antialiased min-h-screen flex items-center justify-center px-6 py-12`}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent blur-[120px] pointer-events-none" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative z-10 w-full max-w-md"
+        >
+          <Link href="/" className="flex items-center gap-2 mb-8 text-white hover:text-gray-300 transition-colors" aria-label="Go to homepage">
+            <div className="w-6 h-6 bg-white/10 rounded-md flex items-center justify-center">
+              <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
+            </div>
+            <span className="text-sm font-medium tracking-tight">Enfinotes</span>
+          </Link>
+          <div className="bg-[#0c0c0c] border border-white/10 rounded-2xl p-8 text-center">
+            <div className="w-14 h-14 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center mx-auto mb-5">
+              <MailCheck className="w-7 h-7 text-indigo-400" aria-hidden="true" />
+            </div>
+            <h1 className="text-2xl font-medium text-white mb-2">Check your email</h1>
+            <p className="text-sm text-[#8a8f98] mb-1">
+              We sent a confirmation link to
+            </p>
+            <p className="text-sm font-medium text-white mb-6">{email}</p>
+            <p className="text-xs text-[#8a8f98] mb-8">
+              Click the link in the email to activate your account. The link expires in 24 hours. Check your spam folder if you don&apos;t see it.
+            </p>
+            <Link
+              href="/auth/signin"
+              className="inline-flex items-center justify-center w-full h-11 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-medium hover:bg-white/10 transition-all"
+            >
+              Back to sign in
+            </Link>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className={`${GeistSans.className} bg-black text-[#8a8f98] antialiased min-h-screen flex items-center justify-center px-6 py-12`}>

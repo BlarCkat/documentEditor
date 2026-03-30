@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import crypto from 'crypto';
+import type { SubscriptionTier } from '@/types';
+
+function getTierFromPlanCode(planCode: string): SubscriptionTier {
+  if (planCode === process.env.NEXT_PUBLIC_PAYSTACK_BASIC_PLAN_CODE) return 'basic';
+  if (planCode === process.env.NEXT_PUBLIC_PAYSTACK_PRO_PLAN_CODE) return 'pro';
+  // Fallback: treat unknown paid plan as basic
+  return 'basic';
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,45 +28,62 @@ export async function POST(request: NextRequest) {
 
     switch (event.event) {
       case 'subscription.create':
-      case 'subscription.enable':
-        // Handle subscription activation
-        if (event.data.customer?.metadata?.userId) {
+      case 'subscription.enable': {
+        const userId = event.data.customer?.metadata?.userId;
+        const planCode = event.data.plan?.plan_code;
+        const subscriptionCode = event.data.subscription_code;
+        const customerCode = event.data.customer?.customer_code;
+
+        if (userId) {
+          const tier = planCode ? getTierFromPlanCode(planCode) : 'basic';
           await supabase
             .from('users')
             .update({
               subscription_status: 'active',
-              subscription_tier: 'pro',
+              subscription_tier: tier,
+              subscription_start_date: new Date().toISOString(),
+              ...(subscriptionCode && { paystack_subscription_code: subscriptionCode }),
+              ...(customerCode && { paystack_customer_code: customerCode }),
             })
-            .eq('id',event.data.customer.metadata.userId);
+            .eq('id', userId);
         }
         break;
-      case 'subscription.disable':
-        // Handle subscription cancellation
-        if (event.data.customer?.metadata?.userId) {
+      }
+
+      case 'subscription.disable': {
+        const userId = event.data.customer?.metadata?.userId;
+        if (userId) {
           await supabase
             .from('users')
             .update({
               subscription_status: 'cancelled',
               subscription_tier: 'free',
             })
-            .eq('id',event.data.customer.metadata.userId);
+            .eq('id', userId);
         }
         break;
-      case 'charge.success':
-        if (event.data.metadata?.userId) {
+      }
+
+      case 'charge.success': {
+        const userId = event.data.metadata?.userId;
+        const tier = (event.data.metadata?.subscriptionTier as SubscriptionTier) || 'basic';
+        if (userId) {
           await supabase
             .from('users')
             .update({
               subscription_status: 'active',
+              subscription_tier: tier,
               last_payment_date: new Date().toISOString(),
             })
-            .eq('id',event.data.metadata.userId);
+            .eq('id', userId);
         }
         break;
+      }
     }
 
     return NextResponse.json({ status: 'success' });
   } catch (error) {
+    console.error('Webhook error:', error);
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
   }
 }

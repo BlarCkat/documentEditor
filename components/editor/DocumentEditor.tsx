@@ -38,6 +38,7 @@ export function DocumentEditor({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit,
       Placeholder.configure({ placeholder }),

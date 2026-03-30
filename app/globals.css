@@ -150,6 +150,8 @@
   font-size: 0.9375rem;
   line-height: 1.75;
   caret-color: #f0f0f0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 .doc-editor .ProseMirror > * + * { margin-top: 0.6em; }
 .doc-editor .ProseMirror p.is-editor-empty:first-child::before {
