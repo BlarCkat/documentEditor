@@ -499,8 +499,8 @@ export default function EnfinotesLanding() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-20">
             <div className="flex flex-col gap-8">
               <div>
-                <h3 className="text-white text-3xl font-medium mb-4 tracking-tight">{landingContent.tracking.cycles.title}</h3>
-                <p className="text-sm max-w-sm leading-relaxed">{landingContent.tracking.cycles.description}</p>
+                <h3 className="text-white text-3xl font-medium mb-4 tracking-tight">{landingContent.tracking.schedule.title}</h3>
+                <p className="text-sm max-w-sm leading-relaxed">{landingContent.tracking.schedule.description}</p>
               </div>
 
               <motion.div
@@ -510,49 +510,46 @@ export default function EnfinotesLanding() {
                 })}
                 className="bg-[#0c0c0c] border border-white/8 rounded-xl p-6 shadow-2xl relative h-[300px] overflow-hidden"
               >
-                <div className="flex justify-between items-center mb-8">
-                  <div className="flex flex-col">
-                    <span className="text-white text-sm font-medium">Cycle {landingContent.tracking.cycles.cycleNumber}</span>
-                    <div className="flex gap-4 mt-2">
-                        {landingContent.tracking.cycles.legend.map((label, i) => {
-                          const colors = ['gray', 'yellow', 'indigo'];
-                          return (
-                            <div key={i} className={`flex items-center gap-1.5 text-[9px] text-${colors[i]}-500 uppercase`}>
-                              <div className={`w-1.5 h-1.5 rounded-full bg-${colors[i]}-500`} aria-hidden="true" /> {label}
-                            </div>
-                          );
-                        })}
-                    </div>
-                  </div>
+                <div className="flex items-center justify-between mb-6">
+                  <span className="text-white text-sm font-medium">Upcoming posts</span>
+                  <span className="text-[10px] text-indigo-400 uppercase tracking-widest">Scheduled</span>
                 </div>
 
-                <div className="relative h-40 w-full">
-                  <svg viewBox="0 0 400 100" className="w-full h-full" aria-label="Cycle progress chart">
-                    <motion.path
-                      {...getAnimationProps({
-                        initial: { pathLength: 0 },
-                        whileInView: { pathLength: 1 }
-                      })}
-                      d="M0,80 Q100,75 200,60 T400,40" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2"
-                    />
-                    <motion.path
-                      {...getAnimationProps({
-                        initial: { pathLength: 0 },
-                        whileInView: { pathLength: 1 }
-                      })}
-                      d="M0,90 Q120,85 240,40 T400,10" fill="none" stroke="#eab308" strokeWidth="2" strokeDasharray="4 2"
-                    />
-                    <motion.path
-                      {...getAnimationProps({
-                        initial: { pathLength: 0 },
-                        whileInView: { pathLength: 1 }
-                      })}
-                      d="M0,95 Q150,90 300,70 T400,50" fill="none" stroke="#6366f1" strokeWidth="2"
-                    />
-                  </svg>
-                  <div className="absolute bottom-0 w-full flex justify-between text-[8px] text-gray-700 uppercase tracking-widest pt-4">
-                    <span>Apr 22</span><span>Apr 29</span>
-                  </div>
+                <div className="flex flex-col gap-3">
+                  {landingContent.tracking.schedule.posts.map((post, i) => {
+                    const platformColors: Record<string, string> = {
+                      twitter: 'bg-sky-500',
+                      linkedin: 'bg-blue-600',
+                      instagram: 'bg-pink-500',
+                    };
+                    const platformLabels: Record<string, string> = {
+                      twitter: 'X',
+                      linkedin: 'in',
+                      instagram: 'IG',
+                    };
+                    return (
+                      <motion.div
+                        key={i}
+                        {...getAnimationProps({
+                          initial: { opacity: 0, x: -10 },
+                          whileInView: { opacity: 1, x: 0 },
+                          transition: { delay: i * 0.1 }
+                        })}
+                        className="flex items-center gap-3 p-3 bg-white/3 border border-white/8 rounded-lg"
+                      >
+                        <div className={`w-6 h-6 rounded-md ${platformColors[post.platform]} flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0`}>
+                          {platformLabels[post.platform]}
+                        </div>
+                        <p className="text-xs text-gray-300 flex-1 truncate">{post.preview}</p>
+                        <span className="text-[9px] text-gray-600 whitespace-nowrap">{post.time}</span>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+
+                <div className="absolute bottom-6 left-6 right-6 flex items-center gap-2 pt-3 border-t border-white/5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                  <span className="text-[10px] text-gray-600">3 posts queued this week</span>
                 </div>
               </motion.div>
             </div>

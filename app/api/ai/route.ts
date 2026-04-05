@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest } from 'next/server';
 import type { AIAction } from '@/components/editor/AIMenu';
+import { getAuthUser, unauthorizedResponse } from '@/lib/server-auth';
 
 const SYSTEM_PROMPT = `You are Enfin AI, a world-class writing assistant integrated into Enfinotes — a content creation workspace. Your job is to help writers create better notes, documents, and social media posts.
 
@@ -39,6 +40,9 @@ function buildPrompt(action: AIAction, content: string, selection: string, custo
 }
 
 export async function POST(req: NextRequest) {
+  const user = await getAuthUser(req);
+  if (!user) return unauthorizedResponse();
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return Response.json(

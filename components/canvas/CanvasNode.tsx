@@ -100,7 +100,7 @@ function fileToDataUrl(file: File): Promise<string> {
 // ── Main NoteNode ─────────────────────────────────────────────────────────────
 export function NoteNode({ id, data, selected }: NodeProps<NoteNodeType>) {
   const { updateNodeData, deleteElements } = useReactFlow();
-  const { userProfile } = useAuth();
+  const { userProfile, session } = useAuth();
 
   const [isEditing,   setIsEditing]   = useState(false);
   const [focusField,  setFocusField]  = useState<'title' | 'content'>('title');
@@ -166,7 +166,10 @@ export function NoteNode({ id, data, selected }: NodeProps<NoteNodeType>) {
     try {
       const res  = await fetch('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token && { Authorization: `Bearer ${session.access_token}` }),
+        },
         body: JSON.stringify({ action, content: stripHtml(data.content), selection: '' }),
       });
       const json = await res.json() as { text?: string; error?: string };

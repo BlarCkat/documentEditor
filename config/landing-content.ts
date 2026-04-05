@@ -86,11 +86,10 @@ interface LandingContent {
     ];
   };
   tracking: {
-    cycles: {
+    schedule: {
       title: string;
       description: string;
-      cycleNumber: number;
-      legend: string[];
+      posts: { platform: string; preview: string; time: string }[];
     };
     triage: {
       title: string;
@@ -257,11 +256,14 @@ export const landingContent: LandingContent = {
   },
 
   tracking: {
-    cycles: {
-      title: "Build momentum with Cycles",
-      description: "Create healthy posting routines and focus your team on what content should happen next.",
-      cycleNumber: 55,
-      legend: ["Scope", "Started", "Completed"]
+    schedule: {
+      title: "Schedule content ahead of time",
+      description: "Plan your posts days or weeks in advance. Set a date and time, and Enfinotes publishes automatically so you never miss a beat.",
+      posts: [
+        { platform: "twitter",   preview: "The one habit that changed how I write threads…",    time: "Today · 9:00 AM"  },
+        { platform: "linkedin",  preview: "3 lessons from shipping a product in 30 days",        time: "Tomorrow · 12:00 PM" },
+        { platform: "instagram", preview: "Behind the scenes: my writing setup in 2025",         time: "Apr 5 · 6:00 PM" }
+      ]
     },
     triage: {
       title: "Manage incoming work with Triage",

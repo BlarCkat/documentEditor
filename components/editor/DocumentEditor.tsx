@@ -10,6 +10,7 @@ import { EditorToolbar } from './EditorToolbar';
 import { AIMenu, type AIAction } from './AIMenu';
 import { BubbleToolbar } from './BubbleToolbar';
 import MentionList, { type MentionItem } from './MentionList';
+import { useAuth } from '@/lib/auth-context';
 
 interface DocumentEditorProps {
   content: string;
@@ -28,6 +29,7 @@ export function DocumentEditor({
   autoFocus = true,
   showToolbar = true,
 }: DocumentEditorProps) {
+  const { session } = useAuth();
   const mentionItemsRef = useRef(mentionItems);
   useEffect(() => { mentionItemsRef.current = mentionItems; }, [mentionItems]);
 
@@ -153,7 +155,10 @@ export function DocumentEditor({
     try {
       const res = await fetch('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token && { Authorization: `Bearer ${session.access_token}` }),
+        },
         body: JSON.stringify({ action, content: fullContent, selection, customPrompt }),
       });
       const data = await res.json() as { text?: string; error?: string };

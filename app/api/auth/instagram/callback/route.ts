@@ -40,9 +40,10 @@ export async function GET(request: NextRequest) {
 
     const tokenData = await tokenResponse.json();
 
-    // Get user info
+    // Get user info — token sent in Authorization header, not URL, to avoid logging exposure
     const userInfoResponse = await fetch(
-      `https://graph.instagram.com/v18.0/me?fields=id,username&access_token=${tokenData.access_token}`
+      'https://graph.instagram.com/v18.0/me?fields=id,username',
+      { headers: { Authorization: `Bearer ${tokenData.access_token}` } }
     );
 
     if (!userInfoResponse.ok) {

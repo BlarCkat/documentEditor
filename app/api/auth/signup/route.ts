@@ -1,6 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
+/** Escape characters that are special in HTML to prevent injection in email templates */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // Admin client — never expose the service role key to the browser
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,7 +18,8 @@ const supabaseAdmin = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } },
 );
 
-function confirmationEmailHtml(displayName: string, confirmationUrl: string): string {
+function confirmationEmailHtml(rawDisplayName: string, confirmationUrl: string): string {
+  const displayName = escapeHtml(rawDisplayName);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
