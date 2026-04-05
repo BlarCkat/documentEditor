@@ -98,30 +98,33 @@ export async function POST(request: NextRequest) {
       platform: platforms[0],
     };
 
-    const results = await postToMultiplePlatforms(postContent, socialAccounts, platforms);
-    const allSucceeded = Object.values(results).every((r) => r.success);
+    const results = await postToMultiplePlatforms(postContent, socialAccounts as any, platforms);
+    const successfulPlatforms = platforms.filter(p => results[p].success);
+    const allSucceeded = successfulPlatforms.length === platforms.length;
+    const anySucceeded = successfulPlatforms.length > 0;
 
-    if (allSucceeded) {
-      for (const platform of platforms) {
-        if (results[platform].success && results[platform].platformPostId) {
-          const { error: publishError } = await db
-            .from('published_posts')
-            .insert({
-              id: `${noteId}-${platform}-${Date.now()}`,
-              note_id: noteId,
-              user_id: authUser.id,
-              platform,
-              platform_post_id: results[platform].platformPostId!,
-              platform_url: results[platform].platformUrl!,
-              posted_at: new Date().toISOString(),
-            });
+    // Record successful posts regardless of whether others failed
+    for (const platform of successfulPlatforms) {
+      const result = results[platform];
+      if (result.platformPostId) {
+        const { error: publishError } = await db
+          .from('published_posts')
+          .insert({
+            note_id: noteId,
+            user_id: authUser.id,
+            platform,
+            platform_post_id: result.platformPostId,
+            platform_url: result.platformUrl || '',
+            posted_at: new Date().toISOString(),
+          });
 
-          if (publishError) {
-            console.error(`Failed to record published_post for ${platform}:`, publishError);
-          }
+        if (publishError) {
+          console.error(`Failed to record published_post for ${platform}:`, publishError);
         }
       }
+    }
 
+    if (anySucceeded) {
       const { error: updateError } = await db
         .from('notes')
         .update({ status: 'published', updated_at: new Date().toISOString() })
@@ -130,8 +133,12 @@ export async function POST(request: NextRequest) {
       if (updateError) {
         console.error('Failed to update note status:', updateError);
       }
+    }
 
+    if (allSucceeded) {
       return NextResponse.json({ success: true, results, message: 'Posted to all platforms' });
+    } else if (anySucceeded) {
+      return NextResponse.json({ success: true, results, message: 'Posted to some platforms (partial success)' }, { status: 207 });
     }
 
     return NextResponse.json({ success: false, results, message: 'Some platforms failed' }, { status: 400 });

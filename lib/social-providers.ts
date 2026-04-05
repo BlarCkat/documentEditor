@@ -289,21 +289,32 @@ export async function postToMultiplePlatforms(
 ): Promise<Record<string, PostResult>> {
   const results: Record<string, PostResult> = {};
 
-  for (const platform of platforms) {
-    const account = accounts[platform];
-    if (!account) {
-      results[platform] = { success: false, error: `${platform} account not connected` };
-      continue;
-    }
+  // Execute all posts concurrently for better performance
+  const promises = platforms.map(async (platform) => {
+    try {
+      const account = accounts[platform];
+      if (!account) {
+        return { platform, result: { success: false, error: `${platform} account not connected` } };
+      }
 
-    if (platform === 'twitter') {
-      results[platform] = await postToTwitter(content, account);
-    } else if (platform === 'instagram') {
-      results[platform] = await postToInstagram(content, account);
-    } else if (platform === 'linkedin') {
-      results[platform] = await postToLinkedIn(content, account);
+      let result: PostResult;
+      if (platform === 'twitter') {
+        result = await postToTwitter(content, account);
+      } else if (platform === 'instagram') {
+        result = await postToInstagram(content, account);
+      } else {
+        result = await postToLinkedIn(content, account);
+      }
+      return { platform, result };
+    } catch (error) {
+      return { platform, result: { success: false, error: `Unexpected error: ${error instanceof Error ? error.message : 'Unknown'}` } };
     }
-  }
+  });
+
+  const settledResults = await Promise.all(promises);
+  settledResults.forEach(({ platform, result }) => {
+    results[platform] = result;
+  });
 
   return results;
 }
