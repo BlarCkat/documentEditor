@@ -64,9 +64,6 @@ export async function postToTwitter(
       return { success: false, error: validation.error };
     }
 
-    // Dynamic import to avoid build errors if package not installed
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error twitter-api-v2 is an optional peer dependency
     const { TwitterApi } = await import('twitter-api-v2');
 
     if (!process.env.TWITTER_API_KEY || !process.env.TWITTER_API_SECRET) {
