@@ -161,9 +161,9 @@ export function DocumentEditor({
         },
         body: JSON.stringify({ action, content: fullContent, selection, customPrompt }),
       });
-      const data = await res.json() as { text?: string; error?: string };
+      const data = await res.json() as { text?: string; error?: string; message?: string };
 
-      if (data.error) { alert(`Enfin AI: ${data.error}`); return; }
+      if (data.error) { alert(data.message || `Enfin AI: ${data.error}`); return; }
       if (!data.text) return;
 
       // Insert at cursor (or replace selection)

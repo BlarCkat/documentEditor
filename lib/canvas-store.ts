@@ -19,3 +19,19 @@ export function saveCanvasState(userId: string, nodes: Node[], edges: Edge[]): v
     localStorage.setItem(storageKey(userId), JSON.stringify({ nodes, edges }));
   } catch {}
 }
+
+/** Count canvas nodes of a given postType created in the current calendar month. */
+export function countThisMonthByType(userId: string, postType: string): number {
+  const { nodes } = loadCanvasState(userId);
+  const now = new Date();
+  return nodes.filter((n) => {
+    const d = n.data as { postType?: string; createdAt?: string };
+    if ((d.postType ?? 'note') !== postType) return false;
+    if (!d.createdAt) return false;
+    const created = new Date(d.createdAt);
+    return (
+      created.getFullYear() === now.getFullYear() &&
+      created.getMonth() === now.getMonth()
+    );
+  }).length;
+}

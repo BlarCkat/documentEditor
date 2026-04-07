@@ -1,7 +1,10 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { createClient } from '@supabase/supabase-js';
 import { NextRequest } from 'next/server';
 import type { AIAction } from '@/components/editor/AIMenu';
 import { getAuthUser, unauthorizedResponse } from '@/lib/server-auth';
+import { canUseAI, shouldResetMonthlyUsage } from '@/lib/subscriptions';
+import type { SubscriptionTier } from '@/types';
 
 const SYSTEM_PROMPT = `You are Enfin AI, a world-class writing assistant integrated into Enfinotes — a content creation workspace. Your job is to help writers create better notes, documents, and social media posts.
 
@@ -51,6 +54,41 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Admin client for reading and writing usage to the DB
+  const db = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+
+  // Fetch user's current plan + usage
+  const { data: profile } = await db
+    .from('users')
+    .select('subscription_tier, ai_uses, last_reset_date')
+    .eq('id', user.id)
+    .single();
+
+  const tier: SubscriptionTier = (profile?.subscription_tier as SubscriptionTier) || 'free';
+  let aiUses: number = profile?.ai_uses || 0;
+  const lastResetDate = profile?.last_reset_date ? new Date(profile.last_reset_date) : new Date();
+
+  // Monthly reset — if we're in a new calendar month, zero out the counter
+  if (shouldResetMonthlyUsage(lastResetDate)) {
+    aiUses = 0;
+    await db
+      .from('users')
+      .update({ ai_uses: 0, last_reset_date: new Date().toISOString() })
+      .eq('id', user.id);
+  }
+
+  // Enforce free-tier limit
+  if (!canUseAI(aiUses, tier)) {
+    return Response.json(
+      { error: 'AI_LIMIT_REACHED', message: 'You have used all 3 AI assists this month. Upgrade to Pro for unlimited access.' },
+      { status: 403 }
+    );
+  }
+
   let body: { action: AIAction; content: string; selection: string; customPrompt?: string };
   try {
     body = await req.json();
@@ -76,6 +114,12 @@ export async function POST(req: NextRequest) {
       .filter((b) => b.type === 'text')
       .map((b) => b.text)
       .join('');
+
+    // Increment usage counter after a successful call
+    await db
+      .from('users')
+      .update({ ai_uses: aiUses + 1 })
+      .eq('id', user.id);
 
     return Response.json({ text });
   } catch (err) {

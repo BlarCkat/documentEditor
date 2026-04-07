@@ -1,4 +1,4 @@
-export type SubscriptionTier = 'free' | 'basic' | 'pro';
+export type SubscriptionTier = 'free' | 'basic' | 'pro' | 'enterprise';
 
 export interface Subscription {
   tier: SubscriptionTier;
@@ -17,9 +17,9 @@ export interface SubscriptionPlan {
   interval: 'monthly' | 'yearly';
   features: string[];
   limits: {
-    pagesPerMonth: number;
-    aiTokensPerMonth?: number;
-    teamMembers?: number;
+    notesPerMonth: number;    // -1 = unlimited
+    documentsPerMonth: number; // -1 = unlimited
+    aiUsesPerMonth: number;   // -1 = unlimited
   };
   paystackPlanCode?: string;
 }
@@ -55,6 +55,7 @@ export interface UserProfile {
   subscription: Subscription;
   usage: {
     pagesCreated: number;
+    aiUses: number;
     lastResetDate: Date;
   };
   // Onboarding and preferences
