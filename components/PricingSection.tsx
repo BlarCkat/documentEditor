@@ -1,9 +1,8 @@
 'use client';
 
-import React from 'react';
 import { motion } from 'framer-motion';
 import { GeistMono } from 'geist/font/mono';
-import { Check } from 'lucide-react';
+import { Check, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { landingContent } from '@/config/landing-content';
 
@@ -33,15 +32,25 @@ export default function PricingSection() {
               viewport={{ once: true }}
               transition={{ delay: idx * 0.1, duration: 0.8 }}
               className={`relative rounded-2xl border p-8 transition-all ${
-                plan.highlighted
+                plan.comingSoon
+                  ? 'bg-white/[0.01] border-white/5 opacity-60'
+                  : plan.highlighted
                   ? 'bg-white/[0.03] border-white/20 shadow-[0_0_50px_rgba(99,102,241,0.15)] scale-105'
                   : 'bg-white/[0.01] border-white/8 hover:border-white/15'
               }`}
             >
-              {plan.highlighted && (
+              {plan.highlighted && !plan.comingSoon && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                   <span className={`bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-lg ${GeistMono.className}`}>
                     Most Popular
+                  </span>
+                </div>
+              )}
+
+              {plan.comingSoon && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <span className={`bg-white/10 border border-white/15 text-white/60 px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${GeistMono.className}`}>
+                    Coming Soon
                   </span>
                 </div>
               )}
@@ -65,18 +74,29 @@ export default function PricingSection() {
                 ))}
               </ul>
 
-              <Link href={plan.highlighted ? "/auth/signup" : plan.name === 'Free' ? "/auth/signup" : "#"}>
+              {plan.comingSoon ? (
                 <button
-                  className={`w-full h-11 rounded-lg text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black ${
-                    plan.highlighted
-                      ? 'bg-white text-black hover:bg-gray-200 shadow-lg'
-                      : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'
-                  }`}
-                  aria-label={`${plan.cta} - ${plan.name} plan`}
+                  disabled
+                  className="w-full h-11 rounded-lg text-sm font-medium bg-white/5 text-white/30 border border-white/8 cursor-not-allowed flex items-center justify-center gap-2"
+                  aria-label="Enterprise plan — coming soon"
                 >
-                  {plan.cta}
+                  <Lock className="w-3.5 h-3.5" aria-hidden="true" />
+                  Coming Soon
                 </button>
-              </Link>
+              ) : (
+                <Link href={plan.name === 'Free' ? '/auth/signup' : '/auth/signup'}>
+                  <button
+                    className={`w-full h-11 rounded-lg text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black ${
+                      plan.highlighted
+                        ? 'bg-white text-black hover:bg-gray-200 shadow-lg'
+                        : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'
+                    }`}
+                    aria-label={`${plan.cta} - ${plan.name} plan`}
+                  >
+                    {plan.cta}
+                  </button>
+                </Link>
+              )}
             </motion.div>
           ))}
         </div>

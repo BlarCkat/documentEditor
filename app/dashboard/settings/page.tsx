@@ -8,7 +8,7 @@ import { usePaystackPayment } from 'react-paystack';
 import {
   User, Shield,
   Check, Loader2, Sun, Moon, MessageSquare, Grid3x3,
-  ChevronRight, X, Zap, Star, LogOut,
+  ChevronRight, X, Star, LogOut,
 } from 'lucide-react';
 import type { InterfaceStyle, UserRole, SubscriptionTier } from '@/types';
 import { supabase } from '@/lib/supabase';
@@ -79,37 +79,28 @@ interface UpgradeModalProps {
 
 const PLANS = [
   {
-    id: 'basic' as SubscriptionTier,
-    name: 'Basic',
-    price: '$5',
-    period: '/month',
-    amountCents: 500,
-    planCode: process.env.NEXT_PUBLIC_PAYSTACK_BASIC_PLAN_CODE || '',
-    icon: Zap,
-    color: 'text-blue-400',
-    bg: 'bg-blue-500/10',
-    border: 'border-blue-500/20',
-    features: ['Unlimited pages', 'AI writing assistant', 'Analytics dashboard', 'Email support'],
-  },
-  {
     id: 'pro' as SubscriptionTier,
     name: 'Pro',
-    price: '$144',
-    period: '/year',
-    amountCents: 14400,
+    price: '$20',
+    period: '/month',
+    amountCents: 2000,
     planCode: process.env.NEXT_PUBLIC_PAYSTACK_PRO_PLAN_CODE || '',
     icon: Star,
     color: 'text-indigo-400',
     bg: 'bg-indigo-500/10',
     border: 'border-indigo-500/20',
-    badge: 'Best value',
-    features: ['Everything in Basic', 'Priority AI (500K tokens)', 'Advanced analytics', 'Custom templates', 'Priority support'],
+    features: [
+      'Unlimited notes & documents',
+      'Unlimited AI assistance',
+      'Analytics dashboard',
+      'Multi-platform posting',
+      'Priority support',
+    ],
   },
 ];
 
 // Inner component that calls Paystack hooks (must be at component level)
 function UpgradeModalInner({ isOpen, onClose, userEmail, userId, onUpgradeSuccess }: UpgradeModalProps) {
-  const [selected, setSelected] = useState<SubscriptionTier>('basic');
   const [paying, setPaying] = useState(false);
   const [upgradeError, setUpgradeError] = useState('');
 
@@ -127,23 +118,12 @@ function UpgradeModalInner({ isOpen, onClose, userEmail, userId, onUpgradeSucces
 
   const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
 
-  const basicConfig = {
+  const proConfig = {
     reference,
     email: userEmail,
-    amount: 500,           // in smallest currency unit (cents for USD / kobo for NGN)
-    plan: process.env.NEXT_PUBLIC_PAYSTACK_BASIC_PLAN_CODE || '',
-    publicKey,
-    metadata: {
-      userId,
-      subscriptionTier: 'basic',
-      custom_fields: [] as { display_name: string; variable_name: string; value: string }[],
-    },
-  };
-
-  const proConfig = {
-    ...basicConfig,
-    amount: 14400,
+    amount: 2000,
     plan: process.env.NEXT_PUBLIC_PAYSTACK_PRO_PLAN_CODE || '',
+    publicKey,
     metadata: {
       userId,
       subscriptionTier: 'pro',
@@ -151,8 +131,7 @@ function UpgradeModalInner({ isOpen, onClose, userEmail, userId, onUpgradeSucces
     },
   };
 
-  const initializeBasic = usePaystackPayment(basicConfig);
-  const initializePro   = usePaystackPayment(proConfig);
+  const initializePro = usePaystackPayment(proConfig);
 
   const handlePay = () => {
     if (!publicKey) {
@@ -163,24 +142,17 @@ function UpgradeModalInner({ isOpen, onClose, userEmail, userId, onUpgradeSucces
     setUpgradeError('');
 
     const onSuccess = async () => {
-      // Optimistically update the user's tier in Supabase.
-      // The Paystack webhook will also do this, but this gives instant UI feedback.
       await supabase
         .from('users')
-        .update({ subscription_tier: selected, subscription_status: 'active' })
+        .update({ subscription_tier: 'pro', subscription_status: 'active' })
         .eq('id', userId);
-      onUpgradeSuccess(selected);
+      onUpgradeSuccess('pro');
       onClose();
       setPaying(false);
     };
 
     const onPayClose = () => setPaying(false);
-
-    if (selected === 'basic') {
-      initializeBasic({ onSuccess, onClose: onPayClose });
-    } else {
-      initializePro({ onSuccess, onClose: onPayClose });
-    }
+    initializePro({ onSuccess, onClose: onPayClose });
   };
 
   if (!isOpen) return null;
@@ -209,17 +181,10 @@ function UpgradeModalInner({ isOpen, onClose, userEmail, userId, onUpgradeSucces
         <div className="p-6 space-y-3">
           {PLANS.map((plan) => {
             const Icon = plan.icon;
-            const isSelected = selected === plan.id;
             return (
-              <button
+              <div
                 key={plan.id}
-                onClick={() => setSelected(plan.id)}
-                className={cn(
-                  'w-full text-left rounded-xl border p-4 transition-all',
-                  isSelected
-                    ? 'border-foreground bg-accent/40'
-                    : 'border-border bg-background hover:border-border/80 hover:bg-accent/20'
-                )}
+                className="w-full text-left rounded-xl border p-4 border-foreground bg-accent/40"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -229,11 +194,6 @@ function UpgradeModalInner({ isOpen, onClose, userEmail, userId, onUpgradeSucces
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold text-foreground">{plan.name}</span>
-                        {plan.badge && (
-                          <span className="px-1.5 py-0.5 bg-indigo-500/15 text-indigo-400 text-[10px] font-semibold rounded-full">
-                            {plan.badge}
-                          </span>
-                        )}
                       </div>
                       <ul className="mt-1.5 space-y-0.5">
                         {plan.features.map((f) => (
@@ -248,15 +208,9 @@ function UpgradeModalInner({ isOpen, onClose, userEmail, userId, onUpgradeSucces
                   <div className="text-right flex-shrink-0">
                     <span className="text-lg font-bold text-foreground">{plan.price}</span>
                     <span className="text-xs text-muted-foreground">{plan.period}</span>
-                    <div className={cn(
-                      'mt-1.5 w-4 h-4 rounded-full border-2 ml-auto transition-colors',
-                      isSelected ? 'border-foreground bg-foreground' : 'border-muted-foreground'
-                    )}>
-                      {isSelected && <Check className="w-2.5 h-2.5 text-background m-auto mt-0.5" />}
-                    </div>
                   </div>
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>

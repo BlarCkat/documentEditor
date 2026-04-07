@@ -7,7 +7,7 @@ import { GeistMono } from 'geist/font/mono';
 import {
   ChevronRight, Plus, BookOpen, Sparkles, Check,
   Terminal, Layout, BarChart2,
-  FileText, MessageSquare, Command, Filter,
+  FileText, MessageSquare, Command,
   ArrowUp, Clock, Code, GraduationCap, PenTool, Coffee
 } from 'lucide-react';
 import Link from 'next/link';
@@ -556,8 +556,8 @@ export default function EnfinotesLanding() {
 
             <div className="flex flex-col gap-8">
               <div>
-                <h3 className="text-white text-3xl font-medium mb-4 tracking-tight">{landingContent.tracking.triage.title}</h3>
-                <p className="text-sm max-w-sm leading-relaxed">{landingContent.tracking.triage.description}</p>
+                <h3 className="text-white text-3xl font-medium mb-4 tracking-tight">{landingContent.tracking.analytics.title}</h3>
+                <p className="text-sm max-w-sm leading-relaxed">{landingContent.tracking.analytics.description}</p>
               </div>
 
               <motion.div
@@ -567,18 +567,23 @@ export default function EnfinotesLanding() {
                 className="bg-[#0c0c0c] border border-white/8 rounded-xl p-6 shadow-2xl min-h-[300px]"
               >
                 <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-6 flex items-center gap-2">
-                  <Filter className="w-3 h-3" aria-hidden="true" /> Triage
+                  <BarChart2 className="w-3 h-3" aria-hidden="true" /> Analytics
                 </div>
+
+                <div className="mb-6">
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Words written</p>
+                  <p className="text-3xl font-semibold text-white tabular-nums">{landingContent.tracking.analytics.totalWords}</p>
+                </div>
+
                 <div className="space-y-3" role="list">
-                  {landingContent.tracking.triage.items.map((item, i) => (
-                    <div key={i} className="p-3 bg-white/3 border border-white/10 rounded-lg relative group" role="listitem">
-                      <div className="flex justify-between items-start mb-1">
-                        <span className="text-xs text-white font-medium">{item.title}</span>
-                      </div>
-                      <div className="absolute top-8 right-2 bg-[#111] border border-white/10 rounded shadow-xl p-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="flex items-center gap-2 text-[9px] text-gray-400 hover:text-white px-3 py-1.5 w-full text-left bg-transparent border-0 cursor-pointer focus:outline-none focus:bg-white/5 rounded">
-                            <Check className="w-2.5 h-2.5" aria-hidden="true" /> {item.action}
-                          </button>
+                  {landingContent.tracking.analytics.stats.map((stat, i) => (
+                    <div key={i} className="flex items-center gap-3" role="listitem">
+                      <span className="text-[10px] text-gray-500 w-16 flex-shrink-0">{stat.label}</span>
+                      <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${stat.pct}%`, backgroundColor: stat.color, opacity: 0.8 }}
+                        />
                       </div>
                     </div>
                   ))}

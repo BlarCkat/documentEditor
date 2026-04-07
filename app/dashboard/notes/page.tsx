@@ -3,13 +3,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { loadCanvasState, saveCanvasState } from '@/lib/canvas-store';
+import { loadCanvasState, saveCanvasState, countThisMonthByType } from '@/lib/canvas-store';
+import { canCreateNote, canCreateDocument, getPlanLimits } from '@/lib/subscriptions';
 import { cn } from '@/lib/utils';
 import type { NoteNodeData, NoteNodeType } from '@/components/canvas/CanvasNode';
-import type { PostType } from '@/types';
+import type { PostType, SubscriptionTier } from '@/types';
 import { FaXTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa6';
-import { FileText, BookOpen, SlidersHorizontal, Plus, ChevronRight } from 'lucide-react';
+import { FileText, BookOpen, SlidersHorizontal, Plus, ChevronRight, X, ArrowUpRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import Link from 'next/link';
 
 type SortOption   = 'newest' | 'oldest' | 'az' | 'za';
 type FilterOption = 'all' | PostType;
@@ -40,11 +42,12 @@ function stripHtml(html: string) {
 }
 
 export default function NotesPage() {
-  const { user }  = useAuth();
+  const { user, userProfile }  = useAuth();
   const router    = useRouter();
   const [notes,  setNotes]  = useState<NoteNodeType[]>([]);
   const [filter, setFilter] = useState<FilterOption>('all');
   const [sort,   setSort]   = useState<SortOption>('newest');
+  const [limitMsg, setLimitMsg] = useState('');
 
   const loadNotes = useCallback(() => {
     if (!user) return;
@@ -75,7 +78,30 @@ export default function NotesPage() {
   };
 
   const handleAddNew = () => {
-    if (!user) return;
+    if (!user || !userProfile) return;
+
+    const tier = userProfile.subscription.tier as SubscriptionTier;
+    const targetType: PostType = (filter !== 'all' ? filter : 'note') as PostType;
+    const limits = getPlanLimits(tier);
+
+    if (targetType === 'document') {
+      const docsThisMonth = countThisMonthByType(user.id, 'document');
+      if (!canCreateDocument(docsThisMonth, tier)) {
+        setLimitMsg(
+          `You've used your ${limits.documentsPerMonth} document this month. Upgrade to Pro for unlimited documents.`
+        );
+        return;
+      }
+    } else if (targetType === 'note') {
+      const notesThisMonth = countThisMonthByType(user.id, 'note');
+      if (!canCreateNote(notesThisMonth, tier)) {
+        setLimitMsg(
+          `You've reached the ${limits.notesPerMonth}-note monthly limit. Upgrade to Pro for unlimited notes.`
+        );
+        return;
+      }
+    }
+
     const id = `note-${Date.now()}`;
     const newNode: NoteNodeType = {
       id,
@@ -84,7 +110,7 @@ export default function NotesPage() {
       data: {
         title: '',
         content: '',
-        postType: (filter !== 'all' ? filter : 'note') as PostType,
+        postType: targetType,
         createdAt: new Date().toISOString(),
       },
     };
@@ -118,6 +144,23 @@ export default function NotesPage() {
           </button>
         </div>
       </div>
+
+      {/* Limit warning banner */}
+      {limitMsg && (
+        <div className="flex items-center justify-between gap-3 px-5 py-2.5 bg-amber-500/10 border-b border-amber-500/20 flex-shrink-0">
+          <p className="text-xs text-amber-400">{limitMsg}</p>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link href="/dashboard/settings">
+              <span className="flex items-center gap-1 text-xs font-medium text-amber-400 hover:text-amber-300 transition-colors">
+                Upgrade <ArrowUpRight className="w-3 h-3" />
+              </span>
+            </Link>
+            <button onClick={() => setLimitMsg('')} className="text-amber-400/60 hover:text-amber-400 transition-colors">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Filter tabs */}
       <div className="flex items-center gap-1 px-5 py-2 border-b border-border flex-shrink-0 flex-wrap">

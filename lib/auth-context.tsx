@@ -69,6 +69,7 @@ async function fetchUserProfile(userId: string): Promise<UserProfile | null> {
     },
     usage: {
       pagesCreated: data.pages_created || 0,
+      aiUses: data.ai_uses || 0,
       lastResetDate: data.last_reset_date
         ? new Date(data.last_reset_date)
         : new Date(),

@@ -91,10 +91,11 @@ interface LandingContent {
       description: string;
       posts: { platform: string; preview: string; time: string }[];
     };
-    triage: {
+    analytics: {
       title: string;
       description: string;
-      items: { title: string; action: string }[];
+      totalWords: string;
+      stats: { label: string; pct: number; color: string }[];
     };
   };
   pricing: {
@@ -111,6 +112,7 @@ interface LandingContent {
       features: string[];
       cta: string;
       highlighted: boolean;
+      comingSoon: boolean;
     }[];
   };
   cta: {
@@ -265,11 +267,16 @@ export const landingContent: LandingContent = {
         { platform: "instagram", preview: "Behind the scenes: my writing setup in 2025",         time: "Apr 5 · 6:00 PM" }
       ]
     },
-    triage: {
-      title: "Manage incoming work with Triage",
-      description: "Review and assign incoming sponsorship inquiries, feature requests, and unplanned collab work.",
-      items: [
-        { title: "Sponsorship: Unexpected rate limiting", action: "Accept" }
+    analytics: {
+      title: "Track your output with Analytics",
+      description: "See words written, content type breakdowns, and writing activity — all in one place.",
+      totalWords: "12,480",
+      stats: [
+        { label: "Notes",     pct: 85, color: "#e5e5e5" },
+        { label: "Documents", pct: 55, color: "#60a5fa" },
+        { label: "Twitter",   pct: 40, color: "#38bdf8" },
+        { label: "Instagram", pct: 30, color: "#f472b6" },
+        { label: "LinkedIn",  pct: 20, color: "#3b82f6" }
       ]
     }
   },
@@ -287,13 +294,15 @@ export const landingContent: LandingContent = {
         period: "forever",
         description: "For creators just getting started",
         features: [
-          "3 pages per month",
-          "Basic AI assistance",
-          "Single platform posting",
+          "15 notes per month",
+          "1 document per month",
+          "3 AI assists per month",
+          "Social post drafting",
           "Email support"
         ],
         cta: "Start free",
-        highlighted: false
+        highlighted: false,
+        comingSoon: false
       },
       {
         name: "Pro",
@@ -301,15 +310,15 @@ export const landingContent: LandingContent = {
         period: "month",
         description: "For serious creators",
         features: [
-          "Unlimited pages",
-          "Advanced AI assistance",
-          "Multi-platform scheduling",
+          "Unlimited notes & documents",
+          "Unlimited AI assistance",
+          "Multi-platform posting",
           "Analytics dashboard",
-          "Priority support",
-          "Custom templates"
+          "Priority support"
         ],
         cta: "Upgrade to Pro",
-        highlighted: true
+        highlighted: true,
+        comingSoon: false
       },
       {
         name: "Enterprise",
@@ -318,16 +327,14 @@ export const landingContent: LandingContent = {
         description: "For teams and agencies",
         features: [
           "Everything in Pro",
-          "Up to 10 team members",
-          "Collaborative workspace",
-          "Advanced analytics",
-          "Custom integrations",
-          "Dedicated account manager",
+          "Team collaboration",
           "SSO authentication",
-          "API access"
+          "API access",
+          "Dedicated account manager"
         ],
         cta: "Contact sales",
-        highlighted: false
+        highlighted: false,
+        comingSoon: true
       }
     ]
   },
